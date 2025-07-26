@@ -18,5 +18,17 @@ void test_validate_my_username()
      * TODO: Replace the line below with your code here as described above to verify your /conf/username.txt 
      * config file and my_username() functions are setup properly
      */
-    TEST_ASSERT_TRUE_MESSAGE(false,"AESD students, please fix me!");
+    /*TEST_ASSERT_TRUE_MESSAGE(false,"AESD students, please fix me!");*/
+    
+    /*
+     * get name from config file:
+     *       memory allocated with malloc() -> free() can be called after ASSERT(...),
+     *       as programm aborts on error 
+     */
+    char* m_username_fcf = malloc_username_from_conf_file();
+
+    TEST_ASSERT_EQUAL_STRING_MESSAGE(my_username(), m_username_fcf, "Usernames are not identical");
+
+    free(m_username_fcf); 
+
 }
