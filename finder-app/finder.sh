@@ -1,5 +1,12 @@
 #/bin/sh
 
+#
+# finder.sh
+#
+# Arguments: <path> <searchstring>
+#
+
+
 # test for all parameters <path> and <searchstring>
 if [ $# -ne 2 ]
 then

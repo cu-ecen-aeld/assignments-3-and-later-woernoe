@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# Writer.sh
+#
+# Arguments: <filename> <write string>
+#
+
 # check two arguments
 if [ "$#" -ne 2 ]
 then
