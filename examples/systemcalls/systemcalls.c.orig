@@ -1,8 +1,4 @@
 #include "systemcalls.h"
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/wait.h>
 
 /**
  * @param cmd the command to execute with system()
@@ -21,8 +17,7 @@ bool do_system(const char *cmd)
  *   or false() if it returned a failure
 */
 
-    return(system(cmd) == -1) ? false : true;
-    
+    return true;
 }
 
 /**
@@ -54,8 +49,6 @@ bool do_exec(int count, ...)
     // and may be removed
     command[count] = command[count];
 
-    va_end(args);
-
 /*
  * TODO:
  *   Execute a system command by calling fork, execv(),
@@ -66,46 +59,9 @@ bool do_exec(int count, ...)
  *
 */
 
-    pid_t pid;
-    int   status;
+    va_end(args);
 
-    // call fork for child process
-    pid = fork();
-
-    if (pid < 0 ) {
-        // Error on creating child process()
-        return false;
-    }
-    else if (pid == 0) {
-        //
-        // child process 
-        execv(command[0], command);
-     
-        // terminate with error -1
-        exit(-1);
-    }
-    else {
-        //
-        // Parent
-
-        // wait to terminate
-        wait(&status);
-
-        // check status 
-        if (WIFEXITED(status)) {
-        
-           // check return code      
-           if (WEXITSTATUS(status) != 0)
-               return false;
-
-           // Child process terminated with 0
-           return true;
-        }
-        else {
-           // Error on status
-           return false;
-        }
-    }
+    return true;
 }
 
 /**
@@ -128,7 +84,6 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     // and may be removed
     command[count] = command[count];
 
-    va_end(args);
 
 /*
  * TODO
@@ -138,74 +93,7 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *
 */
 
-    pid_t pid;
-    int   status;
+    va_end(args);
 
-    // Call fork  for child process
-    pid = fork();
-
-    if (pid < 0) {
-        // Error with fork
-        return false;
-    }
-    else if (pid == 0) {
-            
-        // Child process
-        //
-        // Open redirect file
-        int fd = open(outputfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-        
-        if (fd < 0) {
-            //
-            // Error on open file
-            return false;
-        }
-        else {
-
-            // replace standout
-            if (dup2(fd, STDOUT_FILENO) < 0) {
-
-                // Error 
-                close(fd);
-
-                return false;
-             }
-             else {
-
-                // stdout is redirected
-                close(fd);
-
-                // child process
-                execv(command[0], command);
-
-                // something went wrong with execv()    
-                exit(-1);
-             }
-        }
-    }
-    else {
-  
-        // Parent
-        //
-        // Wait terminate
-        wait(&status);
-
-        // check status
-        // Did the childprocess exit
-        if (WIFEXITED(status)) {
-            
-            // is the return code 0
-            if (WEXITSTATUS(status) != 0 )
-                return false;
-
-            return true;
-        }
-        else {
-            // 
-            return false;
-        }
-
-    }
-   
-    return false;
+    return true;
 }
