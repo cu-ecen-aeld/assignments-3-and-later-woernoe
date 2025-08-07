@@ -69,6 +69,12 @@ bool do_exec(int count, ...)
     pid_t pid;
     int   status;
 
+    if (fflush(stdout) != 0) {
+        //
+        // Error on flush
+        return false;
+    }
+
     // call fork for child process
     pid = fork();
 
@@ -141,6 +147,13 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     pid_t pid;
     int   status;
 
+
+    // flush buffers
+    if (fflush(stdout) != 0) {
+        // 
+        // Error on flush
+        return false;
+    }
     // Call fork  for child process
     pid = fork();
 
