@@ -34,7 +34,9 @@ echo "User -> ${USER_NAM}"
 PATHLIB=/home/ernst/CU/assignments/assignment-3-and-later/libs
 FNAM=${PATHLIB}/ld-linux-aarch64.so.1
 
-if [ -f "${FNAM} ]
+echo "FNAM=${FNAM}"
+
+if [ -f "${FNAM}" ]
 then
     echo "Lib - Datei existiert"
 else
