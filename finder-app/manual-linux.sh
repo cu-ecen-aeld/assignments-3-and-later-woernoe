@@ -31,7 +31,7 @@ USER_NAM=$(whoami)
 echo "User -> ${USER_NAM}"
 
 #PATHLIB=/home/ernst/arm-cross-compiler/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib
-PATHLIB=/home/ernst/CU/assignments/assignment-3-and-later/lib
+PATHLIB=/home/ernst/CU/assignments/assignment-3-and-later/libs
 echo "try sudo cp"
 sudo cp ${PATHLIB}/ld-linux-aarch64.so.1 ${OUTDIR}/
 echo "with sudo fine !!!"
