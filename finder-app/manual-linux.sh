@@ -2,7 +2,7 @@
 # Script outline to install and build kernel.
 # Author: Siddhant Jajoo.
 
-# Ass 3 V01
+# Ass 3 V01.5
 
 set -e
 set -u
