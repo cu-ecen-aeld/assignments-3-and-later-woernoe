@@ -27,8 +27,11 @@ mkdir -p ${OUTDIR}
 
 
 #testtt
-cd /home/ernst/arm-cross-compiler/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib
-cp ld-linux-aarch64.so.1 ${OUTDIR}/
+USER_NAM=$(whoami)
+echo "User -> ${USER_NAM}"
+
+PATHLIB=/home/ernst/arm-cross-compiler/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib
+cp ${PATHLIB}/ld-linux-aarch64.so.1 ${OUTDIR}/
 
 
 cd "$OUTDIR"
