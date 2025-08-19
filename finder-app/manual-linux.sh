@@ -125,7 +125,7 @@ sudo mknod -m 666 null c 1 3
 
 
 # TODO: Clean and build the writer utility
-cd ~/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app
+cd /home/ernst/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app
 
 
 make clean
@@ -134,13 +134,13 @@ make CROSS_COMPILE=${CROSS_COMPILE} all
 
 # TODO: Copy the finder related scripts and executables to the /home directory
 # on the target rootfs
-cp ~/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app/writer ${OUTDIR}/rootfs/home
+cp /home/ernst/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app/writer ${OUTDIR}/rootfs/home
 mkdir -p ${OUTDIR}/rootfs/home/conf
-cp ~/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app/conf/assignment.txt ${OUTDIR}/rootfs/home/conf
-cp ~/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app/conf/username.txt ${OUTDIR}/rootfs/home/conf
-cp ~/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app/finder.sh ${OUTDIR}/rootfs/home
-cp ~/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app/finder-test.sh ${OUTDIR}/rootfs/home
-cp ~/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app/autorun-qemu.sh ${OUTDIR}/rootfs/home
+cp /home/ernst/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app/conf/assignment.txt ${OUTDIR}/rootfs/home/conf
+cp /home/ernst/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app/conf/username.txt ${OUTDIR}/rootfs/home/conf
+cp /home/ernst/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app/finder.sh ${OUTDIR}/rootfs/home
+cp /home/ernst/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app/finder-test.sh ${OUTDIR}/rootfs/home
+cp /home/ernst/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app/autorun-qemu.sh ${OUTDIR}/rootfs/home
 
 
 # TODO: Chown the root directory
