@@ -46,7 +46,10 @@ fi
 
 if [ -d "/home" ]
 then
-    echo "/home vorhanden"
+    echo "/home vorhanden:"
+    ls -l /home
+    echo "------"
+  
 else
     echo "/home kein Laufwerk"
 fi
