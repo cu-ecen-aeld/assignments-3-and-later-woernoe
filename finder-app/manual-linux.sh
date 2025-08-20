@@ -48,7 +48,7 @@ if [ -d "/home" ]
 then
     echo "/home vorhanden:"
     ls -l /home
-    echo "------"
+    echo "--------"
   
 else
     echo "/home kein Laufwerk"
