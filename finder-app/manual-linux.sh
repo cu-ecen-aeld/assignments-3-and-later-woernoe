@@ -46,7 +46,9 @@ fi
 
 echo "PWD: $(pwd)"
 
-
+echo "list files"
+ls -l
+echo "---------"
 
 cd /
 echo "Root:"
