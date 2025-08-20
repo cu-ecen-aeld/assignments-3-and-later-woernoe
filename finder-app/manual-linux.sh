@@ -44,6 +44,11 @@ else
 fi
  
 
+cd /
+echo "Root:"
+ls -l /
+echo "======="
+
 if [ -d "/home" ]
 then
     echo "/home vorhanden:"
