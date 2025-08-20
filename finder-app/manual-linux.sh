@@ -60,16 +60,16 @@ else
 fi
 
 
-echo "/tmp:"
-ls -l /tmp
+echo "/libs:"
+ls -l ./libs
 echo "===="
 
-echo "/media"
-ls -l /media
+echo "/libs/lib"
+ls -l ./libs/lib
 echo "=========="
 
-echo "/mnt"
-ls -l /mnt
+echo "/libs/lib64"
+ls -l ./libs/lib64
 echo "======"
 
 echo "/usr"
@@ -82,6 +82,11 @@ then
 else
    echo "/home/ernst nicht vorhanden"
 fi
+
+
+cp ./libs/lib/ld-linux-aarch64.so.1 ${OUTDIR}/
+
+
 
 if [ -d "/home/ernst/CU" ]
 then
