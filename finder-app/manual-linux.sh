@@ -25,45 +25,9 @@ fi
 
 mkdir -p ${OUTDIR}
 
+# remember current pwd 
+STWRKDIR="$(pwd)"
 
-#testtt
-USER_NAM=$(whoami)
-echo "User -> ${USER_NAM}"
-
-#PATHLIB=/home/ernst/arm-cross-compiler/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib
-PATHLIB=libs
-FNAM=${PATHLIB}/ld-linux-aarch64.so.1
-
-echo "FNAM=${FNAM}"
-
-if [ -f "${FNAM}" ]
-then
-    echo "Lib - Datei existiert"
-else
-    echo "Lib - Datei nicht vorhanden"
-fi
- 
-
-echo "PWD: $(pwd)"
-
-echo "list files"
-ls -l
-echo "---------"
-
-
-cp libs/lib/ld-linux-aarch64.so.1 ${OUTDIR}/
-
-echo "File copiert"
-ls -l ${OUTDIR}
-echo "-----------------------------"
-
-
-echo "try sudo cp"
-sudo cp ${PATHLIB}/ld-linux-aarch64.so.1 ${OUTDIR}/
-echo "with sudo fine !!!"
-cp ${PATHLIB}/ld-linux-aarch64.so.1 ${OUTDIR}/
-
-#-----------------
 
 cd "$OUTDIR"
 if [ ! -d "${OUTDIR}/linux-stable" ]; then
@@ -149,11 +113,13 @@ ${CROSS_COMPILE}readelf -a ${OUTDIR}/rootfs/bin/busybox | grep "program interpre
 ${CROSS_COMPILE}readelf -a ${OUTDIR}/rootfs/bin/busybox | grep "Shared library"
 
 
+cd "$STWRKDIR"
+
 # TODO: Add library dependencies to rootfs
-cp /home/ernst/arm-cross-compiler/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 ${OUTDIR}/rootfs/lib
-cp /home/ernst/arm-cross-compiler/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libm.so.6 ${OUTDIR}/rootfs/lib64
-cp /home/ernst/arm-cross-compiler/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 ${OUTDIR}/rootfs/lib64
-cp /home/ernst/arm-cross-compiler/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libc.so.6 ${OUTDIR}/rootfs/lib64
+cp libs/lib/ld-linux-aarch64.so.1 ${OUTDIR}/lib
+cp libs/lib64/libm.so.6 ${OUTDIR}/rootfs/lib64
+cp libs/lib64/libresolv.so.2 ${OUTDIR}/rootfs/lib64
+cp libs/lib64/libc.so.6 ${OUTDIR}/rootfs/lib64
 
 
 # TODO: Make device nodes 
@@ -163,8 +129,9 @@ sudo mknod -m 666 null c 1 3
 
 
 # TODO: Clean and build the writer utility
-cd /home/ernst/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app
+# ---> cd /home/ernst/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app
 
+cd "$STWRKDIR"
 
 make clean
 make CROSS_COMPILE=${CROSS_COMPILE} all
@@ -172,13 +139,13 @@ make CROSS_COMPILE=${CROSS_COMPILE} all
 
 # TODO: Copy the finder related scripts and executables to the /home directory
 # on the target rootfs
-cp /home/ernst/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app/writer ${OUTDIR}/rootfs/home
+cp writer ${OUTDIR}/rootfs/home
 mkdir -p ${OUTDIR}/rootfs/home/conf
-cp /home/ernst/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app/conf/assignment.txt ${OUTDIR}/rootfs/home/conf
-cp /home/ernst/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app/conf/username.txt ${OUTDIR}/rootfs/home/conf
-cp /home/ernst/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app/finder.sh ${OUTDIR}/rootfs/home
-cp /home/ernst/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app/finder-test.sh ${OUTDIR}/rootfs/home
-cp /home/ernst/CU/assignments/assignment-3-and-later/assignment-3-and-later-woernoe/finder-app/autorun-qemu.sh ${OUTDIR}/rootfs/home
+cp conf/assignment.txt ${OUTDIR}/rootfs/home/conf
+cp conf/username.txt ${OUTDIR}/rootfs/home/conf
+cp finder.sh ${OUTDIR}/rootfs/home
+cp finder-test.sh ${OUTDIR}/rootfs/home
+cp autorun-qemu.sh ${OUTDIR}/rootfs/home
 
 
 # TODO: Chown the root directory
