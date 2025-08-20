@@ -74,7 +74,7 @@ echo "======"
 
 echo "/usr"
 ls -l /usr
-echo "============"
+echo "============ "
 
 if [ -d "/home/ernst" ]
 then
