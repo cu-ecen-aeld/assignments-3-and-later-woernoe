@@ -31,7 +31,7 @@ USER_NAM=$(whoami)
 echo "User -> ${USER_NAM}"
 
 #PATHLIB=/home/ernst/arm-cross-compiler/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib
-PATHLIB=/home/ernst/CU/assignments/assignment-3-and-later/libs
+PATHLIB=libs
 FNAM=${PATHLIB}/ld-linux-aarch64.so.1
 
 echo "FNAM=${FNAM}"
@@ -50,81 +50,13 @@ echo "list files"
 ls -l
 echo "---------"
 
-cd /
-echo "Root:"
-ls -l /
-echo "======="
 
-if [ -d "/home" ]
-then
-    echo "/home vorhanden:"
-    ls -l /home
-    echo "--------"
-  
-else
-    echo "/home kein Laufwerk"
-fi
-
-
-echo "finder-app/libs:"
-ls -l finder-app/libs
-echo "===="
-
-echo "./finder-app/libs/lib"
-ls -l finder-app/libs/lib
-echo "=========="
-
-echo "./libs/lib64"
-ls -l finder-app/libs/lib64
-echo "======"
-
-echo "/usr"
-ls -l /usr
-echo "============ "
-
-if [ -d "/home/ernst" ]
-then
-   echo "/home/ernst vorhanden"
-else
-   echo "/home/ernst nicht vorhanden"
-fi
-
-
-cp ./finder-app/libs/lib/ld-linux-aarch64.so.1 ${OUTDIR}/
+cp libs/lib/ld-linux-aarch64.so.1 ${OUTDIR}/
 
 echo "File copiert"
 ls -l ${OUTDIR}
 echo "-----------------------------"
 
-
-
-if [ -d "/home/ernst/CU" ]
-then
-   echo "/home/ernst/CU  vorhanden"
-else
-   echo "/home/ernst/CU nicht vorhanden"
-fi
-
-if [ -d "/home/ernst/CU/assignments" ]
-then
-   echo "/home/ernst/CU/assignments vorhanden" 
-else
-   echo "/home/ernst/CU/assignments nict  vorhanden" 
-fi
-
-if [ -d "/home/ernst/CU/assignments/assignment-3-and-later" ]
-then
-   echo "/home/ernst/CU/assignments/assignment-3-and-later vorhanden" 
-else
-   echo "/home/ernst/CU/assignments/assignment-3-and-later nicht vorhanden" 
-fi
-
-if [ -d "/home/ernst/CU/assignments/assignment-3-and-later/libs" ]
-then
-   echo "/home/ernst/CU/assignments/assignment-3-and-later/libs vorhanden" 
-else
-   echo "/home/ernst/CU/assignments/assignment-3-and-later/libs nicht vorhanden" 
-fi
 
 echo "try sudo cp"
 sudo cp ${PATHLIB}/ld-linux-aarch64.so.1 ${OUTDIR}/
