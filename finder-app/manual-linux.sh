@@ -58,6 +58,24 @@ then
 else
     echo "/home kein Laufwerk"
 fi
+
+
+echo "/tmp:"
+ls -l /tmp
+echo "===="
+
+echo "/media"
+ls -l /media
+echo "=========="
+
+echo "/mnt"
+ls -l /mnt"
+echo "======"
+
+echo "/usr"
+ls -l /usr
+echo "============"
+
 if [ -d "/home/ernst" ]
 then
    echo "/home/ernst vorhanden"
