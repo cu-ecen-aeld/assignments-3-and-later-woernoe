@@ -116,7 +116,7 @@ ${CROSS_COMPILE}readelf -a ${OUTDIR}/rootfs/bin/busybox | grep "Shared library"
 cd "$STWRKDIR"
 
 # TODO: Add library dependencies to rootfs
-cp libs/lib/ld-linux-aarch64.so.1 ${OUTDIR}/lib
+cp libs/lib/ld-linux-aarch64.so.1 ${OUTDIR}/rootfs/lib
 cp libs/lib64/libm.so.6 ${OUTDIR}/rootfs/lib64
 cp libs/lib64/libresolv.so.2 ${OUTDIR}/rootfs/lib64
 cp libs/lib64/libc.so.6 ${OUTDIR}/rootfs/lib64
@@ -158,6 +158,4 @@ sudo chown -R root:root .
 find . | cpio -H newc -ov --owner root:root > ${OUTDIR}/initramfs.cpio
 cd ${OUTDIR}
 gzip -f initramfs.cpio
-
-
 
