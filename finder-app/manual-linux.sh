@@ -69,7 +69,7 @@ ls -l /media
 echo "=========="
 
 echo "/mnt"
-ls -l /mnt"
+ls -l /mnt
 echo "======"
 
 echo "/usr"
