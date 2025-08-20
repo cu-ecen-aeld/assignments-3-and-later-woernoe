@@ -43,11 +43,54 @@ else
     echo "Lib - Datei nicht vorhanden"
 fi
  
+
+if [ -d "/home" ]
+then
+    echo "/home vorhanden"
+else
+    echo "/home kein Laufwerk"
+fi
+if [ -d "/home/ernst" ]
+then
+   echo "/home/ernst vorhanden"
+else
+   echo "/home/ernst nicht vorhanden"
+fi
+
+if [ -d "/home/ernst/CU" ]
+then
+   echo "/home/ernst/CU  vorhanden"
+else
+   echo "/home/ernst/CU nicht vorhanden"
+fi
+
+if [ -d "/home/ernst/CU/assignments" ]
+then
+   echo "/home/ernst/CU/assignments vorhanden" 
+else
+   echo "/home/ernst/CU/assignments nict  vorhanden" 
+fi
+
+if [ -d "/home/ernst/CU/assignments/assignment-3-and-later" ]
+then
+   echo "/home/ernst/CU/assignments/assignment-3-and-later vorhanden" 
+else
+   echo "/home/ernst/CU/assignments/assignment-3-and-later nicht vorhanden" 
+fi
+
+if [ -d "/home/ernst/CU/assignments/assignment-3-and-later/libs" ]
+then
+   echo "/home/ernst/CU/assignments/assignment-3-and-later/libs vorhanden" 
+else
+   echo "/home/ernst/CU/assignments/assignment-3-and-later/libs nicht vorhanden" 
+fi
+
 echo "try sudo cp"
 sudo cp ${PATHLIB}/ld-linux-aarch64.so.1 ${OUTDIR}/
 echo "with sudo fine !!!"
 cp ${PATHLIB}/ld-linux-aarch64.so.1 ${OUTDIR}/
 
+#-----------------
 
 cd "$OUTDIR"
 if [ ! -d "${OUTDIR}/linux-stable" ]; then
