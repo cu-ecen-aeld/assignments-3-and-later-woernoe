@@ -44,6 +44,10 @@ else
 fi
  
 
+echo "PWD: $(pwd)"
+
+
+
 cd /
 echo "Root:"
 ls -l /
