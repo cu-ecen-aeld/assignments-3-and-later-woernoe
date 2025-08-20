@@ -60,16 +60,16 @@ else
 fi
 
 
-echo "/libs:"
-ls -l ./libs
+echo "./finder-app/libs:"
+ls -l ./finder-app/libs
 echo "===="
 
-echo "/libs/lib"
-ls -l ./libs/lib
+echo "./finder-app/libs/lib"
+ls -l ./finder-app/libs/lib
 echo "=========="
 
-echo "/libs/lib64"
-ls -l ./libs/lib64
+echo "./libs/lib64"
+ls -l ./finder-app/libs/lib64
 echo "======"
 
 echo "/usr"
