@@ -2,7 +2,7 @@
 # Script outline to install and build kernel.
 # Author: Siddhant Jajoo.
 
-# Ass 3 V01.5
+# Assignment 3.2 V01.27
 
 set -e
 set -u
@@ -158,3 +158,4 @@ sudo chown -R root:root .
 find . | cpio -H newc -ov --owner root:root > ${OUTDIR}/initramfs.cpio
 cd ${OUTDIR}
 gzip -f initramfs.cpio
+
