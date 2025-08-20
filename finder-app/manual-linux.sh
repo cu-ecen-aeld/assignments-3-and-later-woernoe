@@ -84,7 +84,11 @@ else
 fi
 
 
-cp ./libs/lib/ld-linux-aarch64.so.1 ${OUTDIR}/
+cp ./finder-app/libs/lib/ld-linux-aarch64.so.1 ${OUTDIR}/
+
+echo "File copiert"
+ls -l ${OUTDIR}
+echo "-----------------------------"
 
 
 
