@@ -14,6 +14,37 @@ void* threadfunc(void* thread_param)
     // TODO: wait, obtain mutex, wait, release mutex as described by thread_data structure
     // hint: use a cast like the one below to obtain thread arguments from your parameter
     //struct thread_data* thread_func_args = (struct thread_data *) thread_param;
+
+    // pointer to datastruc
+    
+    struct thread_data* thread_func_args = (struct thread_data *) thread_param;
+
+    // wait thread_data->wait_to_obtain_ms
+    usleep( thread_func_args->wait_to_obtain_ms );
+
+
+    // obtain mutex
+    if ( pthread_mutex_lock( thread_func_args->mutex ) != 0 ) {
+
+        ERROR_LOG("Error on locking mutex");
+        thread_func_args->thread_complete_success = false;
+        return NULL;
+    } 
+
+    
+    // lock: wait
+    usleep( thread_func_args->wait_to_release_ms );
+
+
+    // release mutex
+    if ( pthread_mutex_unlock( thread_func_args->mutex ) != 0 ) {
+        ERROR_LOG("Error on unlocking mutex");
+        thread_func_args->thread_complete_success = false;
+        return NULL;
+    }
+
+    thread_func_args->thread_complete_success = true;
+
     return thread_param;
 }
 
@@ -28,6 +59,31 @@ bool start_thread_obtaining_mutex(pthread_t *thread, pthread_mutex_t *mutex,int 
      *
      * See implementation details in threading.h file comment block
      */
-    return false;
+    struct thread_data* thread_args = (struct thread_data *) malloc(sizeof(struct thread_data));
+
+
+    if (!thread_args) {
+       ERROR_LOG("No free memory for thread_data");
+       return false;
+    }
+   
+    // initialize struct 
+    thread_args->wait_to_obtain_ms = wait_to_obtain_ms;
+    thread_args->wait_to_release_ms = wait_to_release_ms;
+
+    // mutes must be initialized with caller
+    thread_args->mutex = mutex;
+
+    thread_args->thread_complete_success = false;
+
+    // create thread
+    if ( pthread_create( thread, NULL, threadfunc, thread_args) != 0 ) {
+        
+        ERROR_LOG("Error creating thread");
+        return false;
+    }    
+
+    //return false;
+    return true;
 }
 
