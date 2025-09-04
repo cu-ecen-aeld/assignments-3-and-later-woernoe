@@ -25,6 +25,7 @@ all: $(TARGET)
 # link object file
 $(TARGET): $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^
+        #$(CC) $(CFLAGS) $(INCLUDES) $(OBJS) -o $(TARGET) $(LDFLAGS)
 
 # compile source file 
 %.o:  %.c
