@@ -11,6 +11,9 @@ WRITEDIR=/tmp/aeld-data
 #username=$(cat conf/username.txt)
 username=$(cat ../../etc/finder-app/conf/username.txt)
 
+# Assignment 4-2
+cd `dirname $0`
+
 if [ $# -lt 3 ]
 then
 	echo "Using default value ${WRITESTR} for string to write"
