@@ -235,16 +235,14 @@ int daemonize(int server_fd)
     pid = fork();
     if (pid < 0) {
         // Error on fork
-         Writelog(LOG_DEBUG, "error: daemonize pid < 0");
-     printf(" pid 1 < 0\n");
+        Writelog(LOG_DEBUG, "error: daemonize 1st fork (pid < 0)");
+     
         close( server_fd);
         exit(-1);
     }
     if (pid > 0) {
         // Parent
-         Writelog(LOG_DEBUG, " daemonize pid > 0 -> terminate");
         close( server_fd);
-        printf("pid-1 > 0\n");
         exit(0);
     }
 
@@ -254,8 +252,7 @@ int daemonize(int server_fd)
     if (setsid() < 0) {
         close( server_fd);
 
-        Writelog(LOG_DEBUG, "error: setsid");
-   printf("error setsid()\n");
+        Writelog(LOG_DEBUG, "error: daemonize setsid()");
         exit(-1);
     }
 
@@ -263,58 +260,41 @@ int daemonize(int server_fd)
          (set_signal(SIGHUP, SIG_IGN, 0) == -1) ||
          (set_signal(SIGTERM, handle_sigterm, 0) == -1) ) {
          
-         Writelog(LOG_DEBUG, "error: daemonize set_signal");
-printf("error set_signal\n");
+        Writelog(LOG_DEBUG, "error: daemonize set_signals()");
+
         close(server_fd);
         exit(-1);    
     }
 
+    // 2nd fork for daemon
     pid = fork();
     if (pid < 0 ) {
-        Writelog(LOG_DEBUG, "error: daemonize 2-pid < 0");
-printf("Fork 2\n");
+        Writelog(LOG_DEBUG, "error: daemonize 2nd fork (pid < 0)");
+
         close( server_fd);
         exit(-1);
     }
     if (pid > 0) {
-        Writelog(LOG_DEBUG, "error: daemonize 2-pid > 0");
-printf("pid-2 > 0\n");        
         close( server_fd);
         exit(0);
      }
-
-printf("child 2\n");
 
      // set up environment
      umask(0);
      chdir("/");
 
-          
-printf(" descriptoren\n");
-     // File descriptoren schliessen
-//     for (int fd = sysconf(_SC_OPEN_MAX); fd>=0; fd--) {
-//         if ( fd != server_fd ) {
-//printf("  fd=%d closed\n",fd);    
-//             close(fd);
-//         }
-//         else {
-//7printf("  fd=%d not closed\n",fd);    
-//          }
-//     }
-     
-//     printf("daemon running\n");
- 
-Writelog(LOG_DEBUG, "error: daemonize ok ");
-    
+     // File descriptoren schliessen   
      close(STDIN_FILENO);
      close(STDOUT_FILENO);
      close(STDERR_FILENO);
      
+     // link to /dev/null
      int fd = open("/dev/null", O_RDWR);
      dup2(fd, STDIN_FILENO);
      dup2(fd, STDOUT_FILENO);
      dup2(fd, STDERR_FILENO);
 
+     // run accepts
      runAccepts(server_fd);
 
      return 0;
@@ -329,17 +309,10 @@ int main(int argc, char** argv)
 {
 
 
-    // server- / client- variables
-    //int client_fd;
-
-
     // addrinfos 
     struct addrinfo hints, *servinfo;
-    //struct sockaddr_storage client_addr;
     int yes = 1;
-    //socklen_t client_len;
-
-    
+  
     
     // has argument '-d' been added
     for (int i = 1; i < argc; i++) {
@@ -365,36 +338,31 @@ int main(int argc, char** argv)
     int status;
     if ((status = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0 ) {
     
-        Writelog(LOG_DEBUG, "error: getaddrinfo");
+        Writelog(LOG_DEBUG, "error: getaddrinfo()");
 
         exit(-1);
     }
  
-    Writelog(LOG_DEBUG, "call Socket");
-    
-    printf("call socket(..)\n");
     // open (server-)socket
     server_fd = socket( servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
     if (server_fd == -1) {
-        Writelog(LOG_DEBUG, "error: socket");
+       Writelog(LOG_DEBUG, "error: socket()");
        freeaddrinfo(servinfo);
        exit(-1);
     }
 
     // set socketopt
     if (setsockopt( server_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1 ) {
-        Writelog(LOG_DEBUG, "error: setsockopt");
+       Writelog(LOG_DEBUG, "error: setsockopt()");
        close(server_fd);
        freeaddrinfo(servinfo);
        exit(-1);
     }
     
-    Writelog(LOG_DEBUG, "call bind");
-    printf("call bind()\n");
     // bind to AF_INET
     if (bind( server_fd, servinfo->ai_addr, servinfo->ai_addrlen) == -1 ) {
-        Writelog(LOG_DEBUG, "error: bind");
-       printf("Error: bind() - Port already assigned\n");
+       Writelog(LOG_DEBUG, "error: bind()");
+
        close(server_fd);
        freeaddrinfo(servinfo);
        exit(-1);
@@ -403,12 +371,10 @@ int main(int argc, char** argv)
     // no longer in use
     freeaddrinfo(servinfo);
 
-    
-    printf("call listen\n");
     // start listen
     if (listen(server_fd, BACKLOG) == -1) {
-        Writelog(LOG_DEBUG, "error: listen");
-        printf("Error: listen\n");
+        Writelog(LOG_DEBUG, "error: listen()");
+        
         close(server_fd);
         exit(-1);
     }
@@ -416,18 +382,21 @@ int main(int argc, char** argv)
 
     // after bind: start daemon if requested
     if (start_as_daemon) {
-        printf("Start daemon\n");
+        
         daemonize(server_fd);       
     }
     else {
-        printf("no daemon\n");
+        
+        // run accepts from here
         runAccepts(server_fd);
     }
     
-    Writelog(LOG_DEBUG, "after daemonize");
-
+    exit(0);
 }
 
+/*
+** runAccepts() handle for connections
+*/
 int runAccepts(int server_fd)
 {
   
@@ -440,8 +409,7 @@ int runAccepts(int server_fd)
          (set_signal(SIGTERM, handle_shutdown, 0) == -1) ||
          (set_signal(SIGCHLD, sigchld_handler, SA_RESTART) == -1) ) { 
          
-         printf("Error setting signal handler\n");
-         Writelog(LOG_DEBUG, "error: set_signal");
+         Writelog(LOG_DEBUG, "error: runAccepts(): set_signal() ");
 
          close(server_fd);
          exit(-1);
@@ -461,7 +429,7 @@ int runAccepts(int server_fd)
             if (errno == EINTR) {    // not active with SA_RESTART
                 continue;
             }
-            Writelog(LOG_DEBUG, "error: accept");
+            Writelog(LOG_DEBUG, "error: runAccepts(): accept()");
 
             close(server_fd);
             exit (-1);
@@ -471,7 +439,7 @@ int runAccepts(int server_fd)
         pid_t pid = fork();
         if (pid < 0) {
     
-            Writelog(LOG_DEBUG, "error: fork()");
+            Writelog(LOG_DEBUG, "error: runAccepts(): fork()");
 
             close(client_fd);
             close(server_fd);
@@ -657,11 +625,10 @@ int runAccepts(int server_fd)
     
     // remove savefile on close    
     if (unlink(savefile_name) != 0) {
-Writelog(LOG_DEBUG, "error: unlink");
+        Writelog(LOG_DEBUG, "error: runAccept(): unlink()");
         // notify error condition
         exit(-1);
     }
-Writelog(LOG_DEBUG, "exit(0)");
 
     //sleep(5);
     exit (0);
