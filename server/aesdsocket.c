@@ -324,6 +324,7 @@ int main(int argc, char** argv)
         exit(-1);
     }
 
+    printf("call socket(..)\n");
     // open (server-)socket
     server_fd = socket( servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
     if (server_fd == -1) {
@@ -338,6 +339,7 @@ int main(int argc, char** argv)
        exit(-1);
     }
 
+    printf("call bind()\n");
     // bind to AF_INET
     if (bind( server_fd, servinfo->ai_addr, servinfo->ai_addrlen) == -1 ) {
        printf("Error: bind() - Port already assigned\n");
@@ -349,16 +351,20 @@ int main(int argc, char** argv)
     // no longer in use
     freeaddrinfo(servinfo);
 
-
+    
     // after bind: start daemon if requested
     if (start_as_daemon) {
+        printf("Start daemon\n");
         daemonize(server_fd);
     }
+    else {
+        printf("no daemon\n");
+    }
     
-    
+    printf("call listen\n");
     // start listen
     if (listen(server_fd, BACKLOG) == -1) {
- 
+        printf("Error: listen\n");
         close(server_fd);
         exit(-1);
     }
@@ -367,6 +373,8 @@ int main(int argc, char** argv)
     if ( (set_signal(SIGINT, handle_shutdown, 0) == -1) ||
          (set_signal(SIGTERM, handle_shutdown, 0) == -1) ||
          (set_signal(SIGCHLD, sigchld_handler, SA_RESTART) == -1) ) { 
+         
+         printf("Error setting signal handler\n");
          
          close(server_fd);
          exit(-1);
