@@ -241,7 +241,7 @@ int daemonize(int server_fd)
         // Parent
          Writelog(LOG_DEBUG, " daemonize pid > 0 -> terminate");
         close( server_fd);
-        printf("pid-1 > 0);
+        printf("pid-1 > 0\n");
         exit(0);
     }
 
