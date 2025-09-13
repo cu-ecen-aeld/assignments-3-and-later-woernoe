@@ -288,7 +288,7 @@ close( server_fd);
              close(fd);
          }
      }
-
+ 
 Writelog(LOG_DEBUG, "error: daemonize ok ");
 
      return 0;
