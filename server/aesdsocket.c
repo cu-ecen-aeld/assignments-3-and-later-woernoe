@@ -604,9 +604,11 @@ int main(int argc, char** argv)
     
     // remove savefile on close    
     if (unlink(savefile_name) != 0) {
+Writelog(LOG_DEBUG, "error: unlink");
         // notify error condition
         exit(-1);
     }
+Writelog(LOG_DEBUG, "exit(0)");
 
     //sleep(5);
     exit (0);
