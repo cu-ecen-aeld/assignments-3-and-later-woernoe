@@ -17,6 +17,8 @@
 #include <syslog.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
+#include <fcntl.h>
+
 
 
 #define PORT "9000"  // the port users will be connecting to
@@ -47,6 +49,7 @@ volatile sig_atomic_t running = 1;
 // open children
 pid_t chldren_pids[BACKLOG+1];
 
+int runAccepts(int server_fd);
 
 /*
 ** Write message to syslog
@@ -280,20 +283,39 @@ printf("pid-2 > 0\n");
         exit(0);
      }
 
+printf("child 2\n");
+
      // set up environment
      umask(0);
      chdir("/");
 
+          
+printf(" descriptoren\n");
      // File descriptoren schliessen
-     for (int fd = sysconf(_SC_OPEN_MAX); fd>=0; fd--) {
-         if ( fd != server_fd ) {
-             close(fd);
-         }
-     }
+//     for (int fd = sysconf(_SC_OPEN_MAX); fd>=0; fd--) {
+//         if ( fd != server_fd ) {
+//printf("  fd=%d closed\n",fd);    
+//             close(fd);
+//         }
+//         else {
+//7printf("  fd=%d not closed\n",fd);    
+//          }
+//     }
      
-     printf("daemon running\n");
+//     printf("daemon running\n");
  
 Writelog(LOG_DEBUG, "error: daemonize ok ");
+    
+     close(STDIN_FILENO);
+     close(STDOUT_FILENO);
+     close(STDERR_FILENO);
+     
+     int fd = open("/dev/null", O_RDWR);
+     dup2(fd, STDIN_FILENO);
+     dup2(fd, STDOUT_FILENO);
+     dup2(fd, STDERR_FILENO);
+
+     runAccepts(server_fd);
 
      return 0;
 }
@@ -308,15 +330,17 @@ int main(int argc, char** argv)
 
 
     // server- / client- variables
-    int client_fd;
+    //int client_fd;
 
 
     // addrinfos 
     struct addrinfo hints, *servinfo;
-    struct sockaddr_storage client_addr;
+    //struct sockaddr_storage client_addr;
     int yes = 1;
-    socklen_t client_len;
+    //socklen_t client_len;
 
+    
+    
     // has argument '-d' been added
     for (int i = 1; i < argc; i++) {
         if ( strcmp(argv[i], "-d" ) == 0 ) {
@@ -380,18 +404,6 @@ int main(int argc, char** argv)
     freeaddrinfo(servinfo);
 
     
-    // after bind: start daemon if requested
-    if (start_as_daemon) {
-        printf("Start daemon\n");
-        daemonize(server_fd);
-        
-    }
-    else {
-        printf("no daemon\n");
-    }
-    
-    Writelog(LOG_DEBUG, "after daemonize");
-
     printf("call listen\n");
     // start listen
     if (listen(server_fd, BACKLOG) == -1) {
@@ -400,6 +412,28 @@ int main(int argc, char** argv)
         close(server_fd);
         exit(-1);
     }
+
+
+    // after bind: start daemon if requested
+    if (start_as_daemon) {
+        printf("Start daemon\n");
+        daemonize(server_fd);       
+    }
+    else {
+        printf("no daemon\n");
+        runAccepts(server_fd);
+    }
+    
+    Writelog(LOG_DEBUG, "after daemonize");
+
+}
+
+int runAccepts(int server_fd)
+{
+  
+    int client_fd;
+    struct sockaddr_storage client_addr;
+    socklen_t client_len;
 
     // change signal handlers
     if ( (set_signal(SIGINT, handle_shutdown, 0) == -1) ||
