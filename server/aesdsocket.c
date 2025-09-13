@@ -226,15 +226,20 @@ int daemonize(int server_fd)
     // pid for forks
     pid_t pid;
 
+    printf("daemonize\n");
+    
     // 1st Fork
     pid = fork();
     if (pid < 0) {
         // Error on fork
+         Writelog(LOG_DEBUG, "error: daemonize pid < 0");
+     
         close( server_fd);
         exit(-1);
     }
     if (pid > 0) {
         // Parent
+         Writelog(LOG_DEBUG, "error: daemonize pid > 0 -> terminate");
         close( server_fd);
         exit(0);
     }
@@ -244,24 +249,32 @@ int daemonize(int server_fd)
     // set sid
     if (setsid() < 0) {
         close( server_fd);
+
+        Writelog(LOG_DEBUG, "error: setsid");
+
         exit(-1);
     }
 
     if ( (set_signal(SIGCHLD, SIG_IGN, 0) == -1) ||
          (set_signal(SIGHUP, SIG_IGN, 0) == -1) ||
          (set_signal(SIGTERM, handle_sigterm, 0) == -1) ) {
-     
+         
+         Writelog(LOG_DEBUG, "error: daemonize set_signal");
+
         close(server_fd);
         exit(-1);    
     }
 
     pid = fork();
     if (pid < 0 ) {
+        Writelog(LOG_DEBUG, "error: daemonize 2-pid < 0");
+
         close( server_fd);
         exit(-1);
     }
     if (pid > 0) {
-        close( server_fd);
+        Writelog(LOG_DEBUG, "error: daemonize 2-pid > 0");
+close( server_fd);
         exit(0);
      }
 
@@ -275,6 +288,8 @@ int daemonize(int server_fd)
              close(fd);
          }
      }
+
+Writelog(LOG_DEBUG, "error: daemonize ok ");
 
      return 0;
 }
