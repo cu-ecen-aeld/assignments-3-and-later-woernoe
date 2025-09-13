@@ -51,7 +51,7 @@ pid_t chldren_pids[BACKLOG+1];
 /*
 ** Write message to syslog
 */
-void WriteLog(int priority, const char* format, ...)
+void Writelog(int priority, const char* format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -321,27 +321,36 @@ int main(int argc, char** argv)
 
     int status;
     if ((status = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0 ) {
+    
+        Writelog(LOG_DEBUG, "error: getaddrinfo");
+
         exit(-1);
     }
-
+ 
+    Writelog(LOG_DEBUG, "call Socket");
+    
     printf("call socket(..)\n");
     // open (server-)socket
     server_fd = socket( servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
     if (server_fd == -1) {
+        Writelog(LOG_DEBUG, "error: socket");
        freeaddrinfo(servinfo);
        exit(-1);
     }
 
     // set socketopt
     if (setsockopt( server_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1 ) {
+        Writelog(LOG_DEBUG, "error: setsockopt");
        close(server_fd);
        freeaddrinfo(servinfo);
        exit(-1);
     }
-
+    
+    Writelog(LOG_DEBUG, "call bind");
     printf("call bind()\n");
     // bind to AF_INET
     if (bind( server_fd, servinfo->ai_addr, servinfo->ai_addrlen) == -1 ) {
+        Writelog(LOG_DEBUG, "error: bind");
        printf("Error: bind() - Port already assigned\n");
        close(server_fd);
        freeaddrinfo(servinfo);
@@ -356,14 +365,18 @@ int main(int argc, char** argv)
     if (start_as_daemon) {
         printf("Start daemon\n");
         daemonize(server_fd);
+        
     }
     else {
         printf("no daemon\n");
     }
     
+    Writelog(LOG_DEBUG, "after daemonize");
+
     printf("call listen\n");
     // start listen
     if (listen(server_fd, BACKLOG) == -1) {
+        Writelog(LOG_DEBUG, "error: listen");
         printf("Error: listen\n");
         close(server_fd);
         exit(-1);
@@ -375,7 +388,8 @@ int main(int argc, char** argv)
          (set_signal(SIGCHLD, sigchld_handler, SA_RESTART) == -1) ) { 
          
          printf("Error setting signal handler\n");
-         
+         Writelog(LOG_DEBUG, "error: set_signal");
+
          close(server_fd);
          exit(-1);
     }
@@ -394,7 +408,8 @@ int main(int argc, char** argv)
             if (errno == EINTR) {    // not active with SA_RESTART
                 continue;
             }
-        
+            Writelog(LOG_DEBUG, "error: accept");
+
             close(server_fd);
             exit (-1);
         }
@@ -402,6 +417,8 @@ int main(int argc, char** argv)
         // fork for client connection
         pid_t pid = fork();
         if (pid < 0) {
+    
+            Writelog(LOG_DEBUG, "error: fork()");
 
             close(client_fd);
             close(server_fd);
