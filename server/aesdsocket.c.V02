@@ -49,6 +49,7 @@ volatile sig_atomic_t running = 1;
 // open children
 pid_t chldren_pids[BACKLOG+1];
 
+int runAccepts(int server_fd);
 
 /*
 ** Write message to syslog
@@ -216,16 +217,84 @@ void handle_sigterm(int signo)
 }
 
 
-/*
-** Is LF in string
-*/
-int received_LF(char* string)
-{
-    char *p_lf = strchr(string, '\n');
-    
-    return (p_lf != NULL ) ? true : false;
 
+/*
+** start aestsocket as daemon
+*/
+int daemonize(int server_fd)
+{
+    // pid for forks
+    pid_t pid;
+
+    // 1st Fork
+    pid = fork();
+    if ( pid < 0 ) {
+        // Error on fork()
+        Writelog(LOG_DEBUG, "error: daemonize 1st fork (pid < 0)");    
+        close( server_fd );
+        exit(-1);
+    }
+    if ( pid > 0 ) {
+        // Parent
+        close( server_fd);
+        exit(0);
+    }
+
+    // child still alive
+    
+    // set sid
+    if ( setsid() < 0 ) {
+        close( server_fd);
+        Writelog(LOG_DEBUG, "error: daemonize setsid()");
+        exit(-1);
+    }
+
+    // set signal_handler
+    if ( (set_signal(SIGCHLD, SIG_IGN, 0) == -1) ||
+         (set_signal(SIGHUP, SIG_IGN, 0) == -1) ||
+         (set_signal(SIGTERM, handle_sigterm, 0) == -1) ) {
+         
+        Writelog(LOG_DEBUG, "error: daemonize set_signals()");
+        close(server_fd);
+        exit(-1);    
+    }
+
+    // 2nd fork for daemon
+    pid = fork();
+    if ( pid < 0 ) {
+        Writelog(LOG_DEBUG, "error: daemonize 2nd fork (pid < 0)");
+        close( server_fd);
+        exit(-1);
+    }
+    
+    if ( pid > 0 ) {
+        // Parent
+        close( server_fd);
+        exit(0);
+     }
+
+     // set up environment
+     umask( 0 );
+     // set path
+     chdir("/");
+
+     // File descriptoren schliessen   
+     close( STDIN_FILENO );
+     close( STDOUT_FILENO );
+     close( STDERR_FILENO );
+     
+     // link to /dev/null
+     int fd = open("/dev/null", O_RDWR);
+     dup2(fd, STDIN_FILENO);
+     dup2(fd, STDOUT_FILENO);
+     dup2(fd, STDERR_FILENO);
+
+     // run accept handler
+     runAccepts(server_fd);
+
+     return 0;
 }
+
 
 
 /* 
@@ -303,80 +372,27 @@ int main(int argc, char** argv)
     }
 
 
-    // in case of daemon
-    if ( start_as_daemon ) {
-
-        // pid for forks
-        pid_t pid;
-
-        // 1st Fork
-        pid = fork();
-        if ( pid < 0 ) {
-            // Error on fork()
-            Writelog(LOG_DEBUG, "error: daemonize 1st fork (pid < 0)");    
-            close( server_fd );
-            exit(-1);
-        }
-        if ( pid > 0 ) {
-            // Parent  - terminate
-            close( server_fd);
-            exit(0);
-        }
-
-        // child carry on
+    // after bind: start daemon if requested
+    if (start_as_daemon) {
+        
+        // start accept in daemon 
+        daemonize(server_fd);       
+    }
+    else {
+        
+        // run accepts from here
+        runAccepts(server_fd);
+    }
     
-        // set sid
-        if ( setsid() < 0 ) {
-            close( server_fd);
-            Writelog(LOG_DEBUG, "error: daemonize setsid()");
-            exit(-1);
-        }
+    exit(0);
+}
 
-        // set signal_handler
-        if ( (set_signal(SIGCHLD, SIG_IGN, 0) == -1) ||
-             (set_signal(SIGHUP, SIG_IGN, 0) == -1) ||
-             (set_signal(SIGTERM, handle_sigterm, 0) == -1) ) {
-         
-            Writelog(LOG_DEBUG, "error: daemonize set_signals()");
-            close(server_fd);
-            exit(-1);    
-        }
-
-        // 2nd fork for daemon
-        pid = fork();
-        if ( pid < 0 ) {
-            Writelog(LOG_DEBUG, "error: daemonize 2nd fork (pid < 0)");
-            close( server_fd);
-            exit(-1);
-        }
-    
-        if ( pid > 0 ) {
-            // Parent
-            close( server_fd);
-            exit(0);
-         }
-
-         // set up environment
-         umask( 0 );
-         // set path
-         chdir("/");
-
-         // Close open files: stdin, stdout, stderr   
-         close( STDIN_FILENO );
-         close( STDOUT_FILENO );
-         close( STDERR_FILENO );
-     
-         // link stdin, stdout, stderr to /dev/null
-         int fd = open("/dev/null", O_RDWR);
-         dup2(fd, STDIN_FILENO);
-         dup2(fd, STDOUT_FILENO);
-         dup2(fd, STDERR_FILENO);
-
-     } // start_as_daemon
-     
-
-         
-    // accept handler
+/*
+** runAccepts() handle for connections
+*/
+int runAccepts(int server_fd)
+{
+  
     int client_fd;
     struct sockaddr_storage client_addr;
     socklen_t client_len;
@@ -405,7 +421,7 @@ int main(int argc, char** argv)
             if (errno == EINTR) {    // not active with SA_RESTART
                 continue;
             }
-            Writelog(LOG_DEBUG, "error: accept()");
+            Writelog(LOG_DEBUG, "error: runAccepts(): accept()");
 
             close(server_fd);
             exit (-1);
@@ -415,7 +431,7 @@ int main(int argc, char** argv)
         pid_t pid = fork();
         if (pid < 0) {
     
-            Writelog(LOG_DEBUG, "error: fork()");
+            Writelog(LOG_DEBUG, "error: runAccepts(): fork()");
             close(client_fd);
             close(server_fd);
             exit(-1);
@@ -452,8 +468,6 @@ int main(int argc, char** argv)
 
                 // collect received string
                 do {
-                    
-                    // Your implementation should use a newline to separate data packets received. 
                     
                     // read received strem with max-size of BUFFER_SIZE 
                     if  ((n = recv(client_fd, buffer, BUFFER_SIZE, 0)) > 0 ) {
@@ -499,22 +513,14 @@ int main(int argc, char** argv)
                             free(recv_buffer);
                             recv_buffer = NULL;
                         }
-                        syslog(LOG_DEBUG, "-> recv()==-1 " );
 
                         close(client_fd);
                         closelog();
                         exit(-1);
                     }
 
-                    // should not happen
-                    if (recv_buffer == NULL ) {
-                        syslog(LOG_DEBUG, "-> recv_buffer==NULL" );
-                        close(client_fd);
-                        closelog();
-                        exit(-1);
-                    }
-                //} while (bytes_available(client_fd) > 0);
-                } while ( ! received_LF(recv_buffer) );
+                } while (bytes_available(client_fd) > 0);
+
             
                 // recv_buffer should not be NULL if variable total is > 0
                 if  (total > 0 && recv_buffer) {
@@ -522,8 +528,6 @@ int main(int argc, char** argv)
                     // open save-file in append mode
                     FILE* wp = fopen(savefile_name, "a");
                     if (wp == NULL) {
-                        syslog(LOG_DEBUG, "-> wp == NULL" );
-
                         free(recv_buffer);
                         close(client_fd);
                         closelog();
@@ -532,7 +536,6 @@ int main(int argc, char** argv)
 
                     // write to save-file
                     if (fprintf(wp,"%s", recv_buffer) < 0) {
-                        syslog(LOG_DEBUG, "-> fprintf(wp) < 0" );
                         free(recv_buffer);
                         close(client_fd);
                         closelog();
@@ -541,7 +544,6 @@ int main(int argc, char** argv)
 
                     // close save-file
                     if (fclose(wp) == -1) {
-                        syslog(LOG_DEBUG, "-> fclose(wp)" );
                         free(recv_buffer);
                         close(client_fd);
                         closelog();
@@ -559,7 +561,6 @@ int main(int argc, char** argv)
                     // open file
                     FILE* fp = fopen(savefile_name, "r");
                     if (fp == NULL) {
-                        syslog(LOG_DEBUG, "-> fopen(fp) == NULL" );
                         close(client_fd);
                         closelog();
                         exit(-1);
@@ -572,7 +573,7 @@ int main(int argc, char** argv)
                         if (strlen(readfile_buffer) > 0 ) {
                             // send whole buffer
                             if (send(client_fd, readfile_buffer, strlen(readfile_buffer), 0) == -1) {
-                                 syslog(LOG_DEBUG, "-> send() == -1" );
+
                                  close(client_fd);
                                  closelog();
                                  exit(-1);
@@ -583,7 +584,6 @@ int main(int argc, char** argv)
                     // close file
                     if (fclose(fp) == -1)
                     {
-                         syslog(LOG_DEBUG, "-> fclose(fp)" );
                          close(client_fd);
                          closelog();
                          exit(-1);
@@ -614,7 +614,7 @@ int main(int argc, char** argv)
     
     // remove savefile on close    
     if ( unlink(savefile_name) != 0 ) {
-        Writelog(LOG_DEBUG, "error: unlink()");
+        Writelog(LOG_DEBUG, "error: runAccept(): unlink()");
         // notify error condition
         exit(-1);
     }
