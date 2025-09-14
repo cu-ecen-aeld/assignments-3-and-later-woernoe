@@ -121,9 +121,6 @@ void sigchld_handler(int s)
             int code = WEXITSTATUS(status);
 
             if ( code == 255 ) {
- 
-	        //syslog(LOG_DEBUG, "sigchld_handler exit(-1) ");
-                //closelog();
 	        
                 exit(-1);
             }
@@ -142,11 +139,10 @@ void handle_shutdown(int signo)
 
     // terminate main loop
     running = 0;
- 
+
+    // close connections 
     shutdown(server_fd, SHUT_RDWR);
     
-    // 2 sec delay
-    //sleep(2);
     
     // look for open children
     for( int i=0; i< BACKLOG; i++ ) {
@@ -168,6 +164,7 @@ void handle_shutdown(int signo)
 int set_signal(int sig, void (*handler)(int), int flags) 
 {
 
+    // set sigaction 
     struct sigaction sa;
     sa.sa_handler = handler;
     sigemptyset(&sa.sa_mask);
@@ -179,8 +176,6 @@ int set_signal(int sig, void (*handler)(int), int flags)
     
     return 0;
 }
-
-
 
 
 /*
@@ -195,6 +190,7 @@ void *get_in_addr(struct sockaddr *sa)
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+
 /*
 ** more bytes on input stream available
 */
@@ -207,6 +203,7 @@ int bytes_available(int fd)
 
      return bytes_available;
 }
+
 
 /*
 ** Temporary for install daemon
@@ -229,18 +226,15 @@ int daemonize(int server_fd)
     // pid for forks
     pid_t pid;
 
-    printf("daemonize\n");
-    
     // 1st Fork
     pid = fork();
-    if (pid < 0) {
-        // Error on fork
-        Writelog(LOG_DEBUG, "error: daemonize 1st fork (pid < 0)");
-     
-        close( server_fd);
+    if ( pid < 0 ) {
+        // Error on fork()
+        Writelog(LOG_DEBUG, "error: daemonize 1st fork (pid < 0)");    
+        close( server_fd );
         exit(-1);
     }
-    if (pid > 0) {
+    if ( pid > 0 ) {
         // Parent
         close( server_fd);
         exit(0);
@@ -249,44 +243,45 @@ int daemonize(int server_fd)
     // child still alive
     
     // set sid
-    if (setsid() < 0) {
+    if ( setsid() < 0 ) {
         close( server_fd);
-
         Writelog(LOG_DEBUG, "error: daemonize setsid()");
         exit(-1);
     }
 
+    // set signal_handler
     if ( (set_signal(SIGCHLD, SIG_IGN, 0) == -1) ||
          (set_signal(SIGHUP, SIG_IGN, 0) == -1) ||
          (set_signal(SIGTERM, handle_sigterm, 0) == -1) ) {
          
         Writelog(LOG_DEBUG, "error: daemonize set_signals()");
-
         close(server_fd);
         exit(-1);    
     }
 
     // 2nd fork for daemon
     pid = fork();
-    if (pid < 0 ) {
+    if ( pid < 0 ) {
         Writelog(LOG_DEBUG, "error: daemonize 2nd fork (pid < 0)");
-
         close( server_fd);
         exit(-1);
     }
-    if (pid > 0) {
+    
+    if ( pid > 0 ) {
+        // Parent
         close( server_fd);
         exit(0);
      }
 
      // set up environment
-     umask(0);
+     umask( 0 );
+     // set path
      chdir("/");
 
      // File descriptoren schliessen   
-     close(STDIN_FILENO);
-     close(STDOUT_FILENO);
-     close(STDERR_FILENO);
+     close( STDIN_FILENO );
+     close( STDOUT_FILENO );
+     close( STDERR_FILENO );
      
      // link to /dev/null
      int fd = open("/dev/null", O_RDWR);
@@ -294,7 +289,7 @@ int daemonize(int server_fd)
      dup2(fd, STDOUT_FILENO);
      dup2(fd, STDERR_FILENO);
 
-     // run accepts
+     // run accept handler
      runAccepts(server_fd);
 
      return 0;
@@ -314,8 +309,8 @@ int main(int argc, char** argv)
     int yes = 1;
   
     
-    // has argument '-d' been added
-    for (int i = 1; i < argc; i++) {
+    // search for '-d' argument
+    for ( int i = 1; i < argc; i++ ) {
         if ( strcmp(argv[i], "-d" ) == 0 ) {
             
             // set variable for aesdsocket to be started as daemon
@@ -324,7 +319,7 @@ int main(int argc, char** argv)
     }
 
     // init/clear children pid list
-    for (int i = 0; i < BACKLOG; i++ ) {
+    for ( int i = 0; i < BACKLOG; i++ ) {
         chldren_pids[i] = 0;    // no valid pid
     }
     
@@ -336,23 +331,22 @@ int main(int argc, char** argv)
     hints.ai_flags = AI_PASSIVE;      // Server
 
     int status;
-    if ((status = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0 ) {
+    if (( status = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0 ) {
     
         Writelog(LOG_DEBUG, "error: getaddrinfo()");
-
         exit(-1);
     }
  
     // open (server-)socket
     server_fd = socket( servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
-    if (server_fd == -1) {
+    if ( server_fd == -1 ) {
        Writelog(LOG_DEBUG, "error: socket()");
        freeaddrinfo(servinfo);
        exit(-1);
     }
 
     // set socketopt
-    if (setsockopt( server_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1 ) {
+    if ( setsockopt( server_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1 ) {
        Writelog(LOG_DEBUG, "error: setsockopt()");
        close(server_fd);
        freeaddrinfo(servinfo);
@@ -360,9 +354,8 @@ int main(int argc, char** argv)
     }
     
     // bind to AF_INET
-    if (bind( server_fd, servinfo->ai_addr, servinfo->ai_addrlen) == -1 ) {
+    if ( bind( server_fd, servinfo->ai_addr, servinfo->ai_addrlen) == -1 ) {
        Writelog(LOG_DEBUG, "error: bind()");
-
        close(server_fd);
        freeaddrinfo(servinfo);
        exit(-1);
@@ -372,9 +365,8 @@ int main(int argc, char** argv)
     freeaddrinfo(servinfo);
 
     // start listen
-    if (listen(server_fd, BACKLOG) == -1) {
+    if ( listen(server_fd, BACKLOG) == -1 ) {
         Writelog(LOG_DEBUG, "error: listen()");
-        
         close(server_fd);
         exit(-1);
     }
@@ -383,6 +375,7 @@ int main(int argc, char** argv)
     // after bind: start daemon if requested
     if (start_as_daemon) {
         
+        // start accept in daemon 
         daemonize(server_fd);       
     }
     else {
@@ -410,7 +403,6 @@ int runAccepts(int server_fd)
          (set_signal(SIGCHLD, sigchld_handler, SA_RESTART) == -1) ) { 
          
          Writelog(LOG_DEBUG, "error: runAccepts(): set_signal() ");
-
          close(server_fd);
          exit(-1);
     }
@@ -440,7 +432,6 @@ int runAccepts(int server_fd)
         if (pid < 0) {
     
             Writelog(LOG_DEBUG, "error: runAccepts(): fork()");
-
             close(client_fd);
             close(server_fd);
             exit(-1);
@@ -451,7 +442,7 @@ int runAccepts(int server_fd)
             // server_fd no longer needed
             close(server_fd); 
 
-            // Openlog again
+            // Openlog again - for child
             openlog("aesdsocket", LOG_PID | LOG_CONS, LOG_USER);  
             
 	    // get IP address
@@ -540,7 +531,6 @@ int runAccepts(int server_fd)
                         free(recv_buffer);
                         close(client_fd);
                         closelog();
-                       
                         exit(-1);
                     }
 
@@ -586,7 +576,6 @@ int runAccepts(int server_fd)
 
                                  close(client_fd);
                                  closelog();
-                       
                                  exit(-1);
                             }
                         }
@@ -597,7 +586,6 @@ int runAccepts(int server_fd)
                     {
                          close(client_fd);
                          closelog();
-                       
                          exit(-1);
                     }
                 }
@@ -615,6 +603,7 @@ int runAccepts(int server_fd)
 
             // remember child-pid
             setpid(pid);
+            
         }
 
     }  // running
@@ -624,7 +613,7 @@ int runAccepts(int server_fd)
     close(server_fd);
     
     // remove savefile on close    
-    if (unlink(savefile_name) != 0) {
+    if ( unlink(savefile_name) != 0 ) {
         Writelog(LOG_DEBUG, "error: runAccept(): unlink()");
         // notify error condition
         exit(-1);
