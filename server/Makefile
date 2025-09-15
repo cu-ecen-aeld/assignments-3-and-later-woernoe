@@ -10,7 +10,7 @@ CROSS_COMPILE ?=
 
 # compiler and flags: -Wall, -Wextra -> show warnings, -g add debug information
 CC = $(CROSS_COMPILE)gcc
-CFLAGS = -Wall -Wextra -g
+CFLAGS = -Wall -Wextra -Werror -g
 
 # target
 TARGET = aesdsocket

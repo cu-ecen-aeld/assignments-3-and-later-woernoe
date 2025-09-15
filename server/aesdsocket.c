@@ -136,9 +136,18 @@ void handle_shutdown(int signo)
 
     (void)signo;
 
+    if (! start_as_daemon) {
+        const char sigmsg[] = "Cought signal\n";
+        write(STDOUT_FILENO, sigmsg, sizeof(sigmsg) - 1); 
+    }
+    
     // terminate main loop
     running = 0;
 
+    if (! start_as_daemon) {
+        const char sigmsg[] = "Socket shutdown, exiting \n";
+        write(STDOUT_FILENO, sigmsg, sizeof(sigmsg) - 1); 
+    }
     // close connections 
     shutdown(server_fd, SHUT_RDWR);
     
@@ -611,6 +620,7 @@ int main(int argc, char** argv)
                 
     // running == 0. closing server_fd
     close(server_fd);
+    
     
     // remove savefile on close    
     if ( unlink(savefile_name) != 0 ) {
