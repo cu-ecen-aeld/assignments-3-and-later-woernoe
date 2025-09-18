@@ -18,7 +18,7 @@ case "$1" in
            ;; 
      stop) 
            echo "Stopping $DAEMON_NAME" 
-           start-stop-daemon -K -n DAEMON_NAME -s TERM 
+           start-stop-daemon -K -n $DAEMON_NAME -s TERM 
            RET=$?
            [ $RET -eq 0 ] && echo "$DAEMON_NAME stopped" || echo "$DAEMON_NAME stopped with issue"
            ;; 
