@@ -289,7 +289,7 @@ int respond(int client_fd)
         pthread_mutex_lock(&syslog_mutex);
         syslog(LOG_DEBUG, "-> respond fopen(fp) == NULL" );
         pthread_mutex_unlock(&syslog_mutex);
-        return false;
+        return -2;
     }
 
     // read file line by line
@@ -314,7 +314,7 @@ int respond(int client_fd)
                     syslog(LOG_DEBUG, "-> respond send < 0" );
                     pthread_mutex_unlock(&syslog_mutex);
 
-                    return false;
+                    return -3;
                 }
                 // send(): return of 0 seems to be allowed 
                 //if (sentbytes == 0 ) {
@@ -342,13 +342,13 @@ int respond(int client_fd)
         pthread_mutex_lock(&syslog_mutex);
         syslog(LOG_DEBUG, " -> respond send - fclose(fp)" );
         pthread_mutex_unlock(&syslog_mutex);
-        return false;        
+        return -2;        
     }
 
     // strings sent
     pthread_mutex_unlock(&file_mutex);
     
-    return true;
+    return 0;
 	
 }
 
@@ -392,6 +392,7 @@ void *client_thread(void* arg)
     char* recv_buffer = NULL;
     ssize_t n = 0;
     size_t total = 0;
+    int res;
     
     // assign thread_id 
     pthread_mutex_lock(&clients_mutex);
@@ -477,8 +478,8 @@ void *client_thread(void* arg)
                     
        
                 // Respond to client
-       	        if (respond(client_fd) == false ) {
-       	            n = -2;
+       	        if ((res = respond(client_fd)) != 0 ) {
+       	            n = res;
        	            break;
        	        }
        	   } 
@@ -508,11 +509,13 @@ void *client_thread(void* arg)
          syslog(LOG_DEBUG, "  client_thread break = %ld \n", n);
          pthread_mutex_unlock(&syslog_mutex);
 
-        // terminate
-        retcode = -1;
-        kill(getpid(), SIGTERM);
+        if ( n==-2 ) {
+            // terminate
+            retcode = -1;
+            kill(getpid(), SIGTERM);
+        }
     }
-
+  
     // node no longer used
     node->finish = 1;
   
