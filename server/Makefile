@@ -26,9 +26,9 @@ OBJ = aesdsocket.o
 all: $(TARGET)
 
 # link object file
+# $(CC) $(CFLAGS) $(INCLUDES) $(OBJS) -o $(TARGET) $(LDFLAGS)
 $(TARGET): $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^
-        #$(CC) $(CFLAGS) $(INCLUDES) $(OBJS) -o $(TARGET) $(LDFLAGS)
+	$(CC) $(CFLAGS) $^ -o $@ $(INCLUDES) $(LDFLAGS)
 
 # compile source file 
 %.o:  %.c
