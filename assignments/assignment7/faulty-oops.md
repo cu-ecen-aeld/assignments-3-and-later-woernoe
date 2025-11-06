@@ -1,14 +1,13 @@
-######################################################
+####################################################################################
 #
 #  faulty-oops.md
 #
-######################################################
+####################################################################################
 
-# When executing the following command in the command prompt:
-
-echo  “hello_world” > /dev/faulty
-
-# Generates the following kernel oops due to the null pointer in the Write function: 
+>> When executing the following command in the command prompt:
+echo “hello_world” > /dev/faulty
+	
+>> Generates the following kernel oops due to the null pointer in the Write function:
 
 Unable to handle kernel NULL pointer dereference at virtual address 0000000000000000
 Mem abort info:
@@ -24,21 +23,21 @@ user pgtable: 4k pages, 39-bit VAs, pgdp=0000000041b6b000
 [0000000000000000] pgd=0000000000000000, p4d=0000000000000000, pud=0000000000000000
 Internal error: Oops: 0000000096000045 [#1] SMP
 Modules linked in: hello(O) faulty(O) scull(O)
-CPU: 0 PID: 155 Comm: sh Tainted: G           O       6.1.44 #1
+CPU: 0 PID: 156 Comm: sh Tainted: G           O       6.1.44 #1
 Hardware name: linux,dummy-virt (DT)
 pstate: 80000005 (Nzcv daif -PAN -UAO -TCO -DIT -SSBS BTYPE=--)
 pc : faulty_write+0x10/0x20 [faulty]
 lr : vfs_write+0xc8/0x390
-sp : ffffffc008e0bd20
-x29: ffffffc008e0bd80 x28: ffffff8001b2dcc0 x27: 0000000000000000
+sp : ffffffc008dfbd20
+x29: ffffffc008dfbd80 x28: ffffff8001aa4240 x27: 0000000000000000
 x26: 0000000000000000 x25: 0000000000000000 x24: 0000000000000000
-x23: 0000000000000012 x22: 0000000000000012 x21: ffffffc008e0bdc0
-x20: 0000005583b83250 x19: ffffff8001bd3e00 x18: 0000000000000000
+x23: 0000000000000012 x22: 0000000000000012 x21: ffffffc008dfbdc0
+x20: 0000005572a00500 x19: ffffff8001bca200 x18: 0000000000000000
 x17: 0000000000000000 x16: 0000000000000000 x15: 0000000000000000
 x14: 0000000000000000 x13: 0000000000000000 x12: 0000000000000000
 x11: 0000000000000000 x10: 0000000000000000 x9 : 0000000000000000
 x8 : 0000000000000000 x7 : 0000000000000000 x6 : 0000000000000000
-x5 : 0000000000000001 x4 : ffffffc000787000 x3 : ffffffc008e0bdc0
+x5 : 0000000000000001 x4 : ffffffc000787000 x3 : ffffffc008dfbdc0
 x2 : 0000000000000012 x1 : 0000000000000000 x0 : 0000000000000000
 Call trace:
  faulty_write+0x10/0x20 [faulty]
@@ -56,20 +55,19 @@ Code: d2800001 d2800000 d503233f d50323bf (b900003f)
 Welcome to Buildroot
 buildroot login: 
 
-#  What happened?  
-#       Unable to handle kernel NULL pointer dereference at virtual address 0000000000000000
-#
-#  Where in code did it occur?
-#       pc : faulty_write+0x10/0x20 [faulty]
-#            in Module faulty 0x10 bytes into the function and 0x20 bytes long
-#
-#  
-#  Source Code
-#
-#       ssize_t faulty_write (struct file *filp, const char __user *buf, size_t count,
-#                		loff_t *pos)
-#       {
-#       	/* make a simple fault by dereferencing a NULL pointer */
-#  	        *(int *)0 = 0;
-#       	return 0;
-#       }
+>> What happened?
+Unable to handle kernel NULL pointer dereference at virtual address 0000000000000000
+
+>> Where in code did it occur?
+pc : faulty_write+0x10/0x20 [faulty]
+in Module faulty 0x10 bytes into the function and 0x20 bytes long
+
+>> Source Code
+ssize_t faulty_write (struct file *filp, const char __user *buf, size_t count,
+loff_t *pos)
+{
+    /* make a simple fault by dereferencing a NULL pointer */
+    *(int *)0 = 0;
+    return 0;
+}
+
