@@ -103,6 +103,9 @@ void aesd_circular_buffer_add_entry(struct aesd_circular_buffer *buffer, const s
     /**
     * TODO: implement per description
     */
+    if (buffer->full) {
+        kfree(buffer->entry[buffer->in_offs].buffptr);
+    }
     
     // Copy new entry at in_offs   
     buffer->entry[buffer->in_offs] = *add_entry;

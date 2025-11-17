@@ -21,7 +21,7 @@
 int aesd_major =   0; // use dynamic major
 int aesd_minor =   0;
 
-MODULE_AUTHOR("Your Name Here"); /** TODO: fill in your name **/
+MODULE_AUTHOR("woernoe"); /** TODO: fill in your name **/
 MODULE_LICENSE("Dual BSD/GPL");
 
 struct aesd_dev aesd_device;
@@ -32,6 +32,11 @@ int aesd_open(struct inode *inode, struct file *filp)
     /**
      * TODO: handle open
      */
+    struct aesd_dev *dev;
+    dev = conainter_of(inode->i_cdev, struct aesd_dev, cdev);
+    filp->private_data = dev;
+
+
     return 0;
 }
 
@@ -52,6 +57,54 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
     /**
      * TODO: handle read
      */
+    struct aesd_dev *dev = filp->private_data;
+    struct aesd_circular_buffer *cb = dev->data;
+
+    size_t b_fpos = *f_pos;
+    size_t b_start = 0;
+    size_t totcpy = 0;
+
+    struct aesd_buffer_entry *pEntry = NULL;
+
+    if (mutex_lock_interruptible(&dev->lock))
+         return -ERESTARTSYS;
+
+    // walk buffer
+    while ( ( pEntry = aesd_circular_buffer_find_entry_offset_for_fpos( cb, b_fpos, &b_start)) != NULL ) 
+    {
+        // Nr of bytes to copy
+        size_t cpy_bytes =  be->size - b_start;
+                          
+        // any limitations on amount of receive buffer
+        if ( (totcpy + cpy_bytes) > count ) 
+        {
+            // only the remaining nrs
+            cpy_bytes = count - totcpy;
+        }
+        
+        // copy to userspace 
+        if (copy_to_user(buf + totcpy, pEntry->buffptr + b_start, cpy_bytes)) {
+	    retval = -EFAULT;
+	    goto out;
+	}         
+
+        // pointer to next bufferentry
+        b_fpos += cpy_bytes;          
+         
+        // amount of bytes copied 
+        totcpy += cpy_bytes;
+        // exceeds the limit of userbuffer
+        if ( totcpy >= count) {
+             break;
+        }
+    }
+    
+    retval = totcpy;  
+
+out:
+    mutex_unlock(&dev->lock);
+
+
     return retval;
 }
 
@@ -63,6 +116,85 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
     /**
      * TODO: handle write
      */
+    ssize_t retval = -ENOMEM;
+
+    struct aesd_dev *dev = filp->private_data;
+    struct aesd_circular_buffer *cb = dev->data;
+    char *kmem = NULL;
+
+    if (mutex_lock_interruptible(&dev->lock))
+		return -ERESTARTSYS;
+
+    if (count > 0 )
+    {
+        
+        ssize_t rcount = count;      // # Bytes to request
+
+        if (dev->tmpDataLen != 0)
+        {
+            rcount += dev->tmpDataLen;
+
+            char *kmem = kmalloc(rcount + 1, GFP_KERNEL);
+            if (kmem == NULL)
+                goto out_nomem2;
+
+            memcpy(kmem, dev->tmpData, dev->tmpData.tmpDataLen);
+ 
+            copy_from_user(kmem + dev->tmpDataLen, buf, count);
+
+            kfree(dev->tmpData);
+             
+            dev->tmpData = kmem;
+            dev->tmpDataLen = rcount;
+        }
+        else {
+            char *kmem = kmalloc(count + 1, GFP_KERNEL);
+            if (kmem == NULL)
+                goto out_nomem;
+
+            copy_from_user(kmem, buf, count);
+
+            dev->tmpData = kmem;
+            dev->tmpDataLen = count;
+            
+        } 
+
+        if (*(dev->tmpData + count -1) == '\n') 
+        {
+
+             // temp block on stack           
+             struct aesd_buffer_entry nEntry;
+             
+             nEntry.buffptr = dev->tmpData;
+             nEntry->size = dev->tmpDataCount;
+             
+             dev->tmpData = NULL;
+             dev->tmpDataCount = 0;
+
+             aesd_circular_buffer_add_entry( cb, nentry); 
+             
+        }
+        
+        retval = count;
+    }
+    else {
+       // stopped
+       if (dev->tmpData != NULL )
+           goto oetnomem2;
+    
+       }
+    }
+    goto out; 
+ 
+
+outnomem2:
+    kfree(dev->tmpData);
+    dev->tmpData = NULL;
+    dev->tmpDataCount = 0;
+
+out:
+    mutex_unlock(&dev->lock);
+
     return retval;
 }
 struct file_operations aesd_fops = {
@@ -105,6 +237,9 @@ int aesd_init_module(void)
     /**
      * TODO: initialize the AESD specific portion of the device
      */
+    aesd_circular_buffer_init(&(aesd_device->data));       // we
+    aesd_device.tmpData = NULL;                            // we
+    aesd_device.tmpDataLen = 0;
 
     result = aesd_setup_cdev(&aesd_device);
 
@@ -124,6 +259,14 @@ void aesd_cleanup_module(void)
     /**
      * TODO: cleanup AESD specific poritions here as necessary
      */
+    if (mutex_lock_interruptable(&aesd_device->lock)        
+	return -ERESTARTSYS;
+    aesd_circular_buffer_free_all(&(aesd_device->data));
+    if (aesd_device.tmpData != NULL) {
+        kfree(aesd_device.tmpData);
+        aesd_device.tmpData = NULL;
+    }
+    mutex_unlock(&aesd_device->lock);
 
     unregister_chrdev_region(devno, 1);
 }

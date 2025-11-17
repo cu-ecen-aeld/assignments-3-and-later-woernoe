@@ -28,11 +28,6 @@ struct aesd_dev
     /**
      * TODO: Add structure(s) and locks needed to complete assignment requirements
      */
-    struct aesd_circular_buffer *data;  // we pointer to Circlebuffer data 
- 
-    char*  tmpData;  			// we temp received data
-
-    struct mutex lock;     /* we mutual exclusion semaphore     */
     struct cdev cdev;     /* Char device structure      */
 };
 
