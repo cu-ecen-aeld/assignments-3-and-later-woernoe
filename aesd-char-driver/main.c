@@ -60,7 +60,7 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
      * TODO: handle read
      */
     struct aesd_dev *dev = filp->private_data;
-    struct aesd_circular_buffer *cb = dev->data;
+    struct aesd_circular_buffer *cb = &dev->data;
 
     size_t b_fpos = *f_pos;
     size_t b_start = 0;
@@ -120,7 +120,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
      */
     
     struct aesd_dev *dev = filp->private_data;
-    struct aesd_circular_buffer *cb = dev->data;
+    struct aesd_circular_buffer *cb = &dev->data;
     char *kmem = NULL;
 
     if (mutex_lock_interruptible(&dev->lock))
@@ -277,13 +277,13 @@ void aesd_cleanup_module(void)
      * TODO: cleanup AESD specific poritions here as necessary
      */
     if (mutex_lock_interruptible(&aesd_device.lock) )      
-	return -ERESTARTSYS;
+	return; // -ERESTARTSYS;
 	
     int nEntries =  (aesd_device.data.in_offs - aesd_device.data.out_offs + AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED ) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED;
-    int ind = aesd-device.data.out_offs;	
+    int ind = aesd_device.data.out_offs;	
     for (int i=0 ; i < nEntries; i++ ) {
         // free memory
-        kfree (aesd_device.data[ind].buffptr);
+        kfree (aesd_device.data.entry[ind].buffptr);
         
         ind = (ind  + 1) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED;
     } 	
