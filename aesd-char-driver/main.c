@@ -28,12 +28,14 @@ struct aesd_dev aesd_device;
 
 int aesd_open(struct inode *inode, struct file *filp)
 {
+    struct aesd_dev *dev;
+    
     PDEBUG("open");
     /**
      * TODO: handle open
      */
-    struct aesd_dev *dev;
-    dev = conainter_of(inode->i_cdev, struct aesd_dev, cdev);
+    
+    dev = container_of(inode->i_cdev, struct aesd_dev, cdev);
     filp->private_data = dev;
 
 
@@ -116,8 +118,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
     /**
      * TODO: handle write
      */
-    ssize_t retval = -ENOMEM;
-
+    
     struct aesd_dev *dev = filp->private_data;
     struct aesd_circular_buffer *cb = dev->data;
     char *kmem = NULL;
@@ -130,22 +131,22 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
         
         ssize_t rcount = count;      // # Bytes to request
 
-        if (dev->tmpDataLen != 0)
+        if (dev->tmpDataSize != 0)
         {
-            rcount += dev->tmpDataLen;
+            rcount += dev->tmpDataSize;
 
             char *kmem = kmalloc(rcount + 1, GFP_KERNEL);
             if (kmem == NULL)
                 goto out_nomem2;
 
-            memcpy(kmem, dev->tmpData, dev->tmpData.tmpDataLen);
+            memcpy(kmem, dev->tmpData, dev->tmpData.tmpDataSize);
  
-            copy_from_user(kmem + dev->tmpDataLen, buf, count);
+            copy_from_user(kmem + dev->tmpDataSize, buf, count);
 
             kfree(dev->tmpData);
              
             dev->tmpData = kmem;
-            dev->tmpDataLen = rcount;
+            dev->tmpDataSize = rcount;
         }
         else {
             char *kmem = kmalloc(count + 1, GFP_KERNEL);
@@ -155,7 +156,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
             copy_from_user(kmem, buf, count);
 
             dev->tmpData = kmem;
-            dev->tmpDataLen = count;
+            dev->tmpDataSize = count;
             
         } 
 
@@ -166,11 +167,15 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
              struct aesd_buffer_entry nEntry;
              
              nEntry.buffptr = dev->tmpData;
-             nEntry->size = dev->tmpDataCount;
+             nEntry->size = dev->tmpDataSize;
              
              dev->tmpData = NULL;
-             dev->tmpDataCount = 0;
+             dev->tmpDataSize = 0;
 
+             if (cb->full) {
+                 // free 
+                 kfree(cb->entry[cb->inoffs]);
+             }
              aesd_circular_buffer_add_entry( cb, nentry); 
              
         }
@@ -232,12 +237,18 @@ int aesd_init_module(void)
         printk(KERN_WARNING "Can't get major %d\n", aesd_major);
         return result;
     }
+
     memset(&aesd_device,0,sizeof(struct aesd_dev));
 
     /**
      * TODO: initialize the AESD specific portion of the device
      */
-    aesd_circular_buffer_init(&(aesd_device->data));       // we
+
+
+    aesd_device.data = &aesd_device;
+    mutex_init(&aesd_device.lock);
+    aesd_circular_buffer_init(&(aesd_device.data));       // we
+
     aesd_device.tmpData = NULL;                            // we
     aesd_device.tmpDataLen = 0;
 
@@ -261,10 +272,20 @@ void aesd_cleanup_module(void)
      */
     if (mutex_lock_interruptable(&aesd_device->lock)        
 	return -ERESTARTSYS;
-    aesd_circular_buffer_free_all(&(aesd_device->data));
+	
+    int nEntries =  (aesd_device.in_offs - aesd_device.out_offs + AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED ) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED;	
+    for (int i=0, int ind = aesd-device.in_offs; i < nEntries; i++ ) {
+        // free memory
+        kfree (aesd_device.data[ind].buffptr);
+        
+        ind = (ind  + 1) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED;
+    } 	
+
     if (aesd_device.tmpData != NULL) {
+        // free temp data
         kfree(aesd_device.tmpData);
         aesd_device.tmpData = NULL;
+        aesd_device.tmpDataSize = 0;
     }
     mutex_unlock(&aesd_device->lock);
 

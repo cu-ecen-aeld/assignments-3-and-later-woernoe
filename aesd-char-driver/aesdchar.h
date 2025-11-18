@@ -31,6 +31,7 @@ struct aesd_dev
     struct aesd_circular_buffer *data;  // we pointer to Circlebuffer data 
  
     char*  tmpData;  			// we temp received data
+    size_t tmpDataSize;
 
     struct mutex lock;     /* we mutual exclusion semaphore     */
     struct cdev cdev;     /* Char device structure      */

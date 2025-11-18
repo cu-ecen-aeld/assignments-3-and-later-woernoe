@@ -103,12 +103,10 @@ void aesd_circular_buffer_add_entry(struct aesd_circular_buffer *buffer, const s
     /**
     * TODO: implement per description
     */
-    if (buffer->full) {
-        kfree(buffer->entry[buffer->in_offs].buffptr);
-    }
-    
+        
     // Copy new entry at in_offs   
     buffer->entry[buffer->in_offs] = *add_entry;
+    
     // Move in_offs pointer to next entry
     buffer->in_offs = (buffer->in_offs + 1) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED;
 
