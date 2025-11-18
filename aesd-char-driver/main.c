@@ -75,7 +75,7 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
     while ( ( pEntry = aesd_circular_buffer_find_entry_offset_for_fpos( cb, b_fpos, &b_start)) != NULL ) 
     {
         // Nr of bytes to copy
-        size_t cpy_bytes =  be->size - b_start;
+        size_t cpy_bytes =  pEntry->size - b_start;
                           
         // any limitations on amount of receive buffer
         if ( (totcpy + cpy_bytes) > count ) 
@@ -139,7 +139,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
             if (kmem == NULL)
                 goto out_nomem2;
 
-            memcpy(kmem, dev->tmpData, dev->tmpData.tmpDataSize);
+            memcpy(kmem, dev->tmpData, dev->tmpDataSize);
  
             copy_from_user(kmem + dev->tmpDataSize, buf, count);
 
@@ -164,10 +164,14 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
         {
 
              // temp block on stack           
-             struct aesd_buffer_entry nEntry;
+             struct aesd_buffer_entry *pEntry;
              
-             nEntry.buffptr = dev->tmpData;
-             nEntry->size = dev->tmpDataSize;
+             pEntry = kmalloc( sizeof(struct aesd_buffer_entry));
+             if (kmem == NULL )
+                  goto out_nomem;
+                  
+             pEntry->buffptr = dev->tmpData;
+             pEntry->size = dev->tmpDataSize;
              
              dev->tmpData = NULL;
              dev->tmpDataSize = 0;
@@ -176,8 +180,10 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
                  // free 
                  kfree(cb->entry[cb->inoffs]);
              }
+             
              aesd_circular_buffer_add_entry( cb, nentry); 
              
+             kfree(pEntry);   // data copied
         }
         
         retval = count;
@@ -185,7 +191,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
     else {
        // stopped
        if (dev->tmpData != NULL )
-           goto oetnomem2;
+           goto outnomem2;
     
        }
     }
@@ -197,7 +203,7 @@ outnomem2:
     dev->tmpData = NULL;
     dev->tmpDataCount = 0;
 
-out:
+out_nomem:
     mutex_unlock(&dev->lock);
 
     return retval;

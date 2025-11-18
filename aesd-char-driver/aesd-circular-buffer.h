@@ -10,7 +10,6 @@
 
 #ifdef __KERNEL__
 #include <linux/types.h>
-#incldue <linux/slab.h>
 #else
 #include <stddef.h> // size_t
 #include <stdint.h> // uintx_t
