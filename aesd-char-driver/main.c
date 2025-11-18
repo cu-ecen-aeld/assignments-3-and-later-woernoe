@@ -178,7 +178,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
 
              if (cb->full) {
                  // free 
-                 kfree(cb->entry[cb->in_offs]);
+                 kfree(cb->entry[cb->in_offs].buffptr);
              }
              
              aesd_circular_buffer_add_entry( cb, pEntry); 
@@ -251,9 +251,9 @@ int aesd_init_module(void)
      */
 
 
-    aesd_device.data = &aesd_device;
+    //aesd_device.data = &aesd_device;
     mutex_init(&aesd_device.lock);
-    aesd_circular_buffer_init( aesd_device.data );       // we
+    aesd_circular_buffer_init( &aesd_device.data );       // we
 
     aesd_device.tmpData = NULL;                            // we
     aesd_device.tmpDataSize = 0;
@@ -276,11 +276,12 @@ void aesd_cleanup_module(void)
     /**
      * TODO: cleanup AESD specific poritions here as necessary
      */
-    if (mutex_lock_interruptible(&aesd_device->lock) )      
+    if (mutex_lock_interruptible(&aesd_device.lock) )      
 	return -ERESTARTSYS;
 	
-    int nEntries =  (aesd_device.in_offs - aesd_device.out_offs + AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED ) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED;	
-    for (int i=0, int ind = aesd-device.in_offs; i < nEntries; i++ ) {
+    int nEntries =  (aesd_device.data.in_offs - aesd_device.data.out_offs + AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED ) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED;
+    int ind = aesd-device.data.out_offs;	
+    for (int i=0 ; i < nEntries; i++ ) {
         // free memory
         kfree (aesd_device.data[ind].buffptr);
         
@@ -293,7 +294,7 @@ void aesd_cleanup_module(void)
         aesd_device.tmpData = NULL;
         aesd_device.tmpDataSize = 0;
     }
-    mutex_unlock(&aesd_device->lock);
+    mutex_unlock(&aesd_device.lock);
 
     unregister_chrdev_region(devno, 1);
 }
