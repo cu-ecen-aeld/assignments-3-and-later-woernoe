@@ -127,23 +127,22 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
 		return -ERESTARTSYS;
 
     if (count > 0 )
-    {
-        
+    {   
         ssize_t rcount = count;      // # Bytes to request
 
-        if (dev->tmpDataSize != 0)
+        if (dev->tmpDataSize != 0)   // previous non terminated string
         {
             rcount += dev->tmpDataSize;
 
-            char *kmem = kmalloc(rcount + 1, GFP_KERNEL);
+            char *kmem = kmalloc(rcount + 1, GFP_KERNEL);   // alloc additional mem
             if (kmem == NULL)
-                goto out_nomem2;
+                goto out;
 
             memcpy(kmem, dev->tmpData, dev->tmpDataSize);
  
             copy_from_user(kmem + dev->tmpDataSize, buf, count);
 
-            kfree(dev->tmpData);
+            kfree(dev->tmpData);  // free 
              
             dev->tmpData = kmem;
             dev->tmpDataSize = rcount;
@@ -151,7 +150,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
         else {
             char *kmem = kmalloc(count + 1, GFP_KERNEL);
             if (kmem == NULL)
-                goto out_nomem;
+                goto out;
 
             copy_from_user(kmem, buf, count);
 
@@ -167,9 +166,13 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
              struct aesd_buffer_entry *pEntry;
              
              pEntry = kmalloc( sizeof(struct aesd_buffer_entry), GFP_KERNEL);
-             if (kmem == NULL )
-                  goto out_nomem;
-                  
+             if (pEntry == NULL )  {
+                 kfree( dev->tmpData);
+                 dev->tmpData = NULL;
+                 dev->TmpDataSize = 0;
+                 goto out;
+             } 
+             
              pEntry->buffptr = dev->tmpData;
              pEntry->size = dev->tmpDataSize;
              
@@ -191,19 +194,15 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
     else {
        // stopped
        if (dev->tmpData != NULL ) {
-           goto out_nomem2;
-    
+           kfree( dev->tmpData);
+           dev->tmpData = NULL;
+           dev->tmpDataSize = 0;
+           goto out;
+   
        }
     }
-    goto out_nomem; 
- 
-
-out_nomem2:
-    kfree(dev->tmpData);
-    dev->tmpData = NULL;
-    dev->tmpDataSize = 0;
-
-out_nomem:
+   
+out:
     mutex_unlock(&dev->lock);
 
     return retval;
