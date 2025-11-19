@@ -59,6 +59,7 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
     /**
      * TODO: handle read
      */
+#ifdef notnow     
     struct aesd_dev *dev = filp->private_data;
     struct aesd_circular_buffer *cb = &dev->data;
 
@@ -105,7 +106,7 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
 
 out:
     mutex_unlock(&dev->lock);
-
+#endif
 
     return retval;
 }
@@ -114,11 +115,13 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
                 loff_t *f_pos)
 {
     ssize_t retval = -ENOMEM;
+    retval = 0; // <<
+    
     PDEBUG("write %zu bytes with offset %lld",count,*f_pos);
     /**
      * TODO: handle write
      */
-    
+#ifdef notnow    
     struct aesd_dev *dev = filp->private_data;
     struct aesd_circular_buffer *cb = &dev->data;
     char *kmem = NULL;
@@ -204,6 +207,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
    
 out:
     mutex_unlock(&dev->lock);
+#endif
 
     return retval;
 }
@@ -235,8 +239,7 @@ int aesd_init_module(void)
 {
     dev_t dev = 0;
     int result;
-    result = alloc_chrdev_region(&dev, aesd_minor, 1,
-            "aesdchar");
+    result = alloc_chrdev_region(&dev, aesd_minor, 1,  "aesdchar");
     aesd_major = MAJOR(dev);
     if (result < 0) {
         printk(KERN_WARNING "Can't get major %d\n", aesd_major);
@@ -250,12 +253,12 @@ int aesd_init_module(void)
      */
 
 
-    //aesd_device.data = &aesd_device;
-    mutex_init(&aesd_device.lock);
-    aesd_circular_buffer_init( &aesd_device.data );       // we
+    ////aesd_device.data = &aesd_device;
+    //mutex_init(&aesd_device.lock);
+    //aesd_circular_buffer_init( &aesd_device.data );       // we
 
-    aesd_device.tmpData = NULL;                            // we
-    aesd_device.tmpDataSize = 0;
+    //aesd_device.tmpData = NULL;                            // we
+    //aesd_device.tmpDataSize = 0;
 
     result = aesd_setup_cdev(&aesd_device);
 
@@ -275,6 +278,7 @@ void aesd_cleanup_module(void)
     /**
      * TODO: cleanup AESD specific poritions here as necessary
      */
+#ifdef notnow     
     if (mutex_lock_interruptible(&aesd_device.lock) )      
 	return; // -ERESTARTSYS;
 	
@@ -294,7 +298,7 @@ void aesd_cleanup_module(void)
         aesd_device.tmpDataSize = 0;
     }
     mutex_unlock(&aesd_device.lock);
-
+#endif
     unregister_chrdev_region(devno, 1);
 }
 
