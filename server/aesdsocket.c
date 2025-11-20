@@ -133,8 +133,11 @@ void *timer_thread(void* arg)
         strftime(date_buf, sizeof(date_buf), "timestamp:%a %d %b %H:%M:%S %Y", tm_info);
         //strftime(date_buf, sizeof(date_buf), "timestamp:%Y-%d-%b %H:%M:%S.  %z", tm_info);
 
+#ifdef IGNORE_TIMER_WRITE
+
         // write to file with locking        
         pthread_mutex_lock(&file_mutex);
+
         FILE *wp = fopen(savefile_name,"a");
         if ( wp ) {
    
@@ -185,6 +188,7 @@ void *timer_thread(void* arg)
         }
         
         pthread_mutex_unlock(&file_mutex);
+#endif
     
 #ifdef use_MONOLITIC       
 
