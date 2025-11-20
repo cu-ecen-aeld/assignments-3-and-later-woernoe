@@ -102,7 +102,7 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
         }
     }
     
-    *fpos += totcpy;
+    *f_pos += totcpy;
     
     retval = totcpy;  
 
@@ -193,7 +193,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
              //    kfree(cb->entry[cb->in_offs].buffptr);
              //}
              
-             aesd_circular_buffer_add_entry( cb, &tEntry); 
+             aesd_circular_buffer_add_entry( cb, &tentry); 
              
              //kfree(pEntry);   // data copied
         }
