@@ -294,7 +294,7 @@ void aesd_cleanup_module(void)
     int ind = aesd_device.data.out_offs;	
     for (int i=0 ; i < nEntries; i++ ) {
         // free memory
-//        kfree (aesd_device.data.entry[ind].buffptr);
+        kfree (aesd_device.data.entry[ind].buffptr);
         
         ind = (ind  + 1) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED;
     } 	
