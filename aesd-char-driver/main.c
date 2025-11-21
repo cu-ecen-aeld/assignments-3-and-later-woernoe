@@ -188,10 +188,12 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
              dev->tmpData = NULL;
              dev->tmpDataSize = 0;
 
-             //if (cb->full) {
-             //    // free 
-             //    kfree(cb->entry[cb->in_offs].buffptr);
-             //}
+             // free entry at in_offs as it will be overwritten
+             if (cb->full) {
+                 // free 
+                 if (cb->entry[cb->in_offs].buffptr)
+                     kfree(cb->entry[cb->in_offs].buffptr);
+             }
              
              aesd_circular_buffer_add_entry( cb, &tentry); 
              
@@ -292,7 +294,7 @@ void aesd_cleanup_module(void)
     int ind = aesd_device.data.out_offs;	
     for (int i=0 ; i < nEntries; i++ ) {
         // free memory
-        kfree (aesd_device.data.entry[ind].buffptr);
+//        kfree (aesd_device.data.entry[ind].buffptr);
         
         ind = (ind  + 1) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED;
     } 	
