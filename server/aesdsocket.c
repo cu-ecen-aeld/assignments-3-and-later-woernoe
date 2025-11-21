@@ -43,7 +43,7 @@ const char* savefile_name =
 #if USE_AESD_CHAR_DEVICE != 1
                               "/var/tmp/aesdsocketdata";
 #else
-                              "/dev/chardriver";
+                              "/dev/aesdchar";
 #endif
 
 int server_fd;

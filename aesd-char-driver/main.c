@@ -188,10 +188,10 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
              dev->tmpData = NULL;
              dev->tmpDataSize = 0;
 
-             //if (cb->full) {
-             //    // free 
-             //    kfree(cb->entry[cb->in_offs].buffptr);
-             //}
+             if (cb->full) {
+                 // free 
+                 kfree(cb->entry[cb->in_offs].buffptr);
+             }
              
              aesd_circular_buffer_add_entry( cb, &tentry); 
              
