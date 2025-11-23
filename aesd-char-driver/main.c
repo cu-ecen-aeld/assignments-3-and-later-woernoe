@@ -313,7 +313,8 @@ void aesd_cleanup_module(void)
     if (mutex_lock_interruptible(&aesd_device.lock) )      
 	return; // -ERESTARTSYS;
 	
-    int nEntries =  (aesd_device.data.in_offs - aesd_device.data.out_offs + AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED ) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED;
+    int nEntries = (aesd_device.data.full ) ? AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED : 
+                       ((aesd_device.data.in_offs - aesd_device.data.out_offs + AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED ) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED);
     int ind = aesd_device.data.out_offs;	
 
     PDEBUG("cleanup: nEntries: %d in: %d out: %d ", nEntries,aesd_device.data.in_offs, aesd_device.data.out_offs );
