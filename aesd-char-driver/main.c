@@ -140,12 +140,17 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
             rcount += dev->tmpDataSize;
 
             char *kmem = kmalloc(rcount + 1, GFP_KERNEL);   // alloc additional mem
+            printk(KERN_ALERT "woernoe: kmwm(1): %p  size: %d \n", kmem, rcount+1 );
+            
             if (kmem == NULL)
                 goto out;
-
+            
+                 
             memcpy(kmem, dev->tmpData, dev->tmpDataSize);
  
             copy_from_user(kmem + dev->tmpDataSize, buf, count);
+
+            printk(KERN_ALERT "woernoe: kfree(1) %p \n", kmwm );
 
             kfree(dev->tmpData);  // free 
              
@@ -154,6 +159,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
         }
         else {
             char *kmem = kmalloc(count + 1, GFP_KERNEL);
+            printk(KERN_ALERT "woernoe: kmwm(2): %p  size: %d \n", kmem, count );
             if (kmem == NULL)
                 goto out;
 
@@ -191,8 +197,12 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
              // free entry at in_offs as it will be overwritten
              if (cb->full) {
                  // free 
-                 if (cb->entry[cb->in_offs].buffptr)
+                 printk(KERN_ALERT "woernoe: ringbuffer full \n");
+                 
+                 if (cb->entry[cb->in_offs].buffptr) {
+                     printk(KERN_ALERT "woernoe: kfree %p \n", cb->entry[cb->in_offs].buffptr);
                      kfree(cb->entry[cb->in_offs].buffptr);
+                 }
              }
              
              aesd_circular_buffer_add_entry( cb, &tentry); 
@@ -204,7 +214,12 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
     }
     else {
        // stopped
+       printk(KERN_ALERT "woernoe: count == 0 \n" );
+
        if (dev->tmpData != NULL ) {
+          
+           printk(KERN_ALERT "woernoe: kfree %p \n", dev->tmpData );
+          
            kfree( dev->tmpData);
            dev->tmpData = NULL;
            dev->tmpDataSize = 0;
@@ -294,6 +309,8 @@ void aesd_cleanup_module(void)
     int ind = aesd_device.data.out_offs;	
     for (int i=0 ; i < nEntries; i++ ) {
         // free memory
+        printk(KERN_ALERT "woernoe: kfree(3): %p ind: %d i: %d nEntries: %d \n", aesd_device.data.entry[ind].buffptr, ind, i, nEntries);
+          
         kfree (aesd_device.data.entry[ind].buffptr);
         
         ind = (ind  + 1) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED;
