@@ -314,8 +314,10 @@ void aesd_cleanup_module(void)
     for (int i=0 ; i < nEntries; i++ ) {
         // free memory
         PDEBUG("cleanup: kfree(3): %p ind: %d i: %d nEntries: %d ", aesd_device.data.entry[ind].buffptr, ind, i, nEntries );
-          
-        kfree (aesd_device.data.entry[ind].buffptr);
+        
+        if (  aesd_device.data.entry[ind].buffptr != NULL) 
+            kfree (aesd_device.data.entry[ind].buffptr);
+        aesd_device.data.entry[ind].buffptr = NULL;
         
         ind = (ind  + 1) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED;
     } 	
