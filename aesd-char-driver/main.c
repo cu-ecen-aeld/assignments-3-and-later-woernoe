@@ -22,8 +22,8 @@ int aesd_major =   0; // use dynamic major
 int aesd_minor =   0;
 
 MODULE_AUTHOR("woernoe"); /** TODO: fill in your name **/
-//MODULE_LICENSE("Dual BSD/GPL");
-MODULE_LICENSE("GPL");
+MODULE_LICENSE("Dual BSD/GPL");
+MODULE_DESCRIPTION("AESD driver sample");
 
 struct aesd_dev aesd_device;
 
