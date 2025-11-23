@@ -222,7 +222,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
 
        if (dev->tmpData != NULL ) {
           
-           PDEBUG("write: kfree %p ", dev-tmpData );
+           PDEBUG("write: kfree %p ", dev->tmpData );
           
            kfree( dev->tmpData);
            dev->tmpData = NULL;
