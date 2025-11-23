@@ -24,6 +24,7 @@ int aesd_minor =   0;
 MODULE_AUTHOR("woernoe"); /** TODO: fill in your name **/
 MODULE_LICENSE("Dual BSD/GPL");
 MODULE_DESCRIPTION("AESD driver sample");
+MODULE_INFO(intree, "Y");
 
 struct aesd_dev aesd_device;
 
