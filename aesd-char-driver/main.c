@@ -140,7 +140,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
             rcount += dev->tmpDataSize;
 
             char *kmem = kmalloc(rcount + 1, GFP_KERNEL);   // alloc additional mem
-            PDEBUG("write "woernoe: kmwm(1): %p  size: %d \n", kmem, rcount+1 );
+            PDEBUG("write woernoe: kmwm(1): %p  size: %d ", kmem, rcount+1 );
             printk(KERN_ALERT );
             
             if (kmem == NULL)
@@ -151,7 +151,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
  
             copy_from_user(kmem + dev->tmpDataSize, buf, count);
 
-            PDEBUG("write: kfree: %p   \n", dev->tmpData );
+            PDEBUG("write: kfree: %p ", dev->tmpData );
 
             kfree(dev->tmpData);  // free 
              
@@ -160,7 +160,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
         }
         else {
             char *kmem = kmalloc(count + 1, GFP_KERNEL);
-            PDEBUG("write: kmem(2): %p  size: %d \n", kmem, count+1 );
+            PDEBUG("write: kmem(2): %p  size: %d ", kmem, count+1 );
   
             if (kmem == NULL)
                 goto out;
@@ -199,10 +199,10 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
              // free entry at in_offs as it will be overwritten
              if (cb->full) {
                  // free 
-                 PDEBUG("write ringbuffer full \n" );
+                 PDEBUG("write ringbuffer full " );
                  
                  if (cb->entry[cb->in_offs].buffptr) {
-                     PDEBUG("write: kfree %p \n", cb->entry[cb->in_offs].buffptr );
+                     PDEBUG("write: kfree %p ", cb->entry[cb->in_offs].buffptr );
                     
                      kfree(cb->entry[cb->in_offs].buffptr);
                  }
@@ -217,11 +217,11 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
     }
     else {
        // stopped
-       PDEBUG("write: count == 0 \n" );
+       PDEBUG("write: count == 0 " );
 
        if (dev->tmpData != NULL ) {
           
-           PDEBUG("write: kfree %p \n", dev-tmpData );
+           PDEBUG("write: kfree %p ", dev-tmpData );
           
            kfree( dev->tmpData);
            dev->tmpData = NULL;
@@ -312,7 +312,7 @@ void aesd_cleanup_module(void)
     int ind = aesd_device.data.out_offs;	
     for (int i=0 ; i < nEntries; i++ ) {
         // free memory
-        PDEBUG("cleanup: kfree(3): %p ind: %d i: %d nEntries: %d \n", aesd_device.data.entry[ind].buffptr, ind, i, nEntries );
+        PDEBUG("cleanup: kfree(3): %p ind: %d i: %d nEntries: %d ", aesd_device.data.entry[ind].buffptr, ind, i, nEntries );
           
         kfree (aesd_device.data.entry[ind].buffptr);
         
@@ -321,7 +321,7 @@ void aesd_cleanup_module(void)
 
     if (aesd_device.tmpData != NULL) {
         // free temp data
-        PDEBUG("cleanup: kfree (tmpData): %p  \n", aesd_device.tmpData );
+        PDEBUG("cleanup: kfree (tmpData): %p  ", aesd_device.tmpData );
         kfree(aesd_device.tmpData);
         aesd_device.tmpData = NULL;
         aesd_device.tmpDataSize = 0;
