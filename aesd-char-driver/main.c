@@ -266,6 +266,8 @@ int aesd_init_module(void)
     dev_t dev = 0;
     int result;
     
+    PDEBUG("aesd_init_module");
+    
     result = alloc_chrdev_region(&dev, aesd_minor, 1,  "aesdchar");
     aesd_major = MAJOR(dev);
     if (result < 0) {
@@ -300,6 +302,8 @@ void aesd_cleanup_module(void)
 {
     dev_t devno = MKDEV(aesd_major, aesd_minor);
 
+    PDEBUG("aesd_cleanup_module");
+
     cdev_del(&aesd_device.cdev);
 
     /**
@@ -311,6 +315,9 @@ void aesd_cleanup_module(void)
 	
     int nEntries =  (aesd_device.data.in_offs - aesd_device.data.out_offs + AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED ) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED;
     int ind = aesd_device.data.out_offs;	
+
+    PDEBUG("cleanup: nEntries: %d in: %d out: %d ", nEntries,aesd_device.data.in_offs, aesd_device.data.out_offs );
+
     for (int i=0 ; i < nEntries; i++ ) {
         // free memory
         PDEBUG("cleanup: kfree(3): %p ind: %d i: %d nEntries: %d ", aesd_device.data.entry[ind].buffptr, ind, i, nEntries );
@@ -330,6 +337,9 @@ void aesd_cleanup_module(void)
         aesd_device.tmpDataSize = 0;
     }
     mutex_unlock(&aesd_device.lock);
+
+    PDEBUG("cleanup: fin " );
+
     
     unregister_chrdev_region(devno, 1);
 }
