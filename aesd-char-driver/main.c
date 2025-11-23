@@ -22,7 +22,8 @@ int aesd_major =   0; // use dynamic major
 int aesd_minor =   0;
 
 MODULE_AUTHOR("woernoe"); /** TODO: fill in your name **/
-MODULE_LICENSE("Dual BSD/GPL");
+//MODULE_LICENSE("Dual BSD/GPL");
+MODULE_LICENSE("GPL");
 
 struct aesd_dev aesd_device;
 
@@ -140,8 +141,8 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
             rcount += dev->tmpDataSize;
 
             char *kmem = kmalloc(rcount + 1, GFP_KERNEL);   // alloc additional mem
-            PDEBUG("write ");
-            PDEBUG("write woernoe: kmwm(1): %p  size: %d ", kmem, rcount+1 );
+            //PDEBUG("write ");
+            //PDEBUG("write woernoe: kmwm(1): %p  size: %d ", kmem, rcount+1 );
             
             if (kmem == NULL)
                 goto out;
@@ -151,7 +152,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
  
             copy_from_user(kmem + dev->tmpDataSize, buf, count);
 
-            PDEBUG("write: kfree: %p ", dev->tmpData );
+            //PDEBUG("write: kfree: %p ", dev->tmpData );
 
             kfree(dev->tmpData);  // free 
              
@@ -160,8 +161,8 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
         }
         else {
             char *kmem = kmalloc(count + 1, GFP_KERNEL);
-            PDEBUG("write: kmem(2): %p  size: %d ", kmem, count+1 );
-            PDEBUG("write (2)");
+            //PDEBUG("write: kmem(2): %p  size: %d ", kmem, count+1 );
+            //PDEBUG("write (2)");
   
             if (kmem == NULL)
                 goto out;
@@ -200,7 +201,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
              // free entry at in_offs as it will be overwritten
              if (cb->full) {
                  // free 
-                 PDEBUG("write ringbuffer full " );
+                 //PDEBUG("write ringbuffer full " );
                  
                  if (cb->entry[cb->in_offs].buffptr) {
                      PDEBUG("write: kfree %p ", cb->entry[cb->in_offs].buffptr );
@@ -218,11 +219,11 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
     }
     else {
        // stopped
-       PDEBUG("write: count == 0 " );
+       //PDEBUG("write: count == 0 " );
 
        if (dev->tmpData != NULL ) {
           
-           PDEBUG("write: kfree %p ", dev->tmpData );
+           //PDEBUG("write: kfree %p ", dev->tmpData );
           
            kfree( dev->tmpData);
            dev->tmpData = NULL;
@@ -266,7 +267,7 @@ int aesd_init_module(void)
     dev_t dev = 0;
     int result;
     
-    PDEBUG("aesd_init_module");
+    //PDEBUG("aesd_init_module");
     
     result = alloc_chrdev_region(&dev, aesd_minor, 1,  "aesdchar");
     aesd_major = MAJOR(dev);
@@ -302,7 +303,7 @@ void aesd_cleanup_module(void)
 {
     dev_t devno = MKDEV(aesd_major, aesd_minor);
 
-    PDEBUG("aesd_cleanup_module");
+    //PDEBUG("aesd_cleanup_module");
 
     cdev_del(&aesd_device.cdev);
 
@@ -317,11 +318,11 @@ void aesd_cleanup_module(void)
                        ((aesd_device.data.in_offs - aesd_device.data.out_offs + AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED ) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED);
     int ind = aesd_device.data.out_offs;	
 
-    PDEBUG("cleanup: nEntries: %d in: %d out: %d ", nEntries,aesd_device.data.in_offs, aesd_device.data.out_offs );
+    //PDEBUG("cleanup: nEntries: %d in: %d out: %d ", nEntries,aesd_device.data.in_offs, aesd_device.data.out_offs );
 
     for (int i=0 ; i < nEntries; i++ ) {
         // free memory
-        PDEBUG("cleanup: kfree(3): %p ind: %d i: %d nEntries: %d ", aesd_device.data.entry[ind].buffptr, ind, i, nEntries );
+        //PDEBUG("cleanup: kfree(3): %p ind: %d i: %d nEntries: %d ", aesd_device.data.entry[ind].buffptr, ind, i, nEntries );
         
         if (  aesd_device.data.entry[ind].buffptr != NULL) 
             kfree (aesd_device.data.entry[ind].buffptr);
@@ -332,14 +333,14 @@ void aesd_cleanup_module(void)
 
     if (aesd_device.tmpData != NULL) {
         // free temp data
-        PDEBUG("cleanup: kfree (tmpData): %p  ", aesd_device.tmpData );
+        //PDEBUG("cleanup: kfree (tmpData): %p  ", aesd_device.tmpData );
         kfree(aesd_device.tmpData);
         aesd_device.tmpData = NULL;
         aesd_device.tmpDataSize = 0;
     }
     mutex_unlock(&aesd_device.lock);
 
-    PDEBUG("cleanup: fin " );
+    //PDEBUG("cleanup: fin " );
 
     
     unregister_chrdev_region(devno, 1);
