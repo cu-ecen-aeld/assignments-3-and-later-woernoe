@@ -140,8 +140,8 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
             rcount += dev->tmpDataSize;
 
             char *kmem = kmalloc(rcount + 1, GFP_KERNEL);   // alloc additional mem
+            PDEBUG("write ");
             PDEBUG("write woernoe: kmwm(1): %p  size: %d ", kmem, rcount+1 );
-            printk(KERN_ALERT );
             
             if (kmem == NULL)
                 goto out;
@@ -161,6 +161,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
         else {
             char *kmem = kmalloc(count + 1, GFP_KERNEL);
             PDEBUG("write: kmem(2): %p  size: %d ", kmem, count+1 );
+            PDEBUG("write (2)");
   
             if (kmem == NULL)
                 goto out;
