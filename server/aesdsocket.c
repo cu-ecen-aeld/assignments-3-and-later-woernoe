@@ -314,7 +314,7 @@ int respond(int client_fd, int cmd_offs, int cmd_ind)
         seekto.write_cmd_offset = cmd_ind;
         
         if ( ioctl(fileno(fp), AESDCHAR_IOCSEEKTO, &seekto) ) {
-            thread_mutex_unlock(&file_mutex);
+            pthread_mutex_unlock(&file_mutex);
 
             pthread_mutex_lock(&syslog_mutex);
             syslog(LOG_DEBUG, "-> respond fopen(fp) == NULL" );
