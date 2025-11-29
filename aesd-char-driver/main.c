@@ -294,7 +294,7 @@ long aesd_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
            }
            
            newpos = 0;
-           int outPtr = dev->data.OutPtr;
+           int outPtr = dev->data.out_offs;
            
            for (int i=0 ; i < req.write_cmd; i++ ) {
                newpos += dev->data.entry[outPtr].size;
