@@ -311,7 +311,7 @@ int respond(int client_fd, int cmd_offs, int cmd_ind)
         struct aesd_seekto seekto;
         
         seekto.write_cmd = cmd_offs;
-        seelto.write_cmd_offset = cmd_ind;
+        seekto.write_cmd_offset = cmd_ind;
         
         if ( ioctl(fileno(fp), AESDCHAR_IOCSEEKTO, &seekto) ) {
             thread_mutex_unlock(&file_mutex);
