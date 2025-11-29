@@ -269,7 +269,7 @@ long aesd_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
    
     if (_IOC_TYPE(cmd) != AESD_IOC_MAGIC) 
         return -ENOTTY;
-    if (_IOC_NR(cmd) > AESD_IOC_MAXNR) 
+    if (_IOC_NR(cmd) > AESDCHAR_IOC_MAXNR) 
         return -ENOTTY;
 
     if (mutex_lock_interruptible(&dev->lock))
@@ -279,7 +279,7 @@ long aesd_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
    
         case AESDCHAR_IOCSEEKTO:
        
-           if (copy_from_user(&req, (void __user *)arg, sizeof(req)) {
+           if (copy_from_user(&req, (void __user *)arg, sizeof(req))) {
                retval =  -EFAULT;
                goto unlock;
            }
