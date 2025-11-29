@@ -22,6 +22,7 @@
 #include <pthread.h>
 #include <time.h>
 
+#include "../aesd-char-driver/aesd_ioctl.h"
 
 #define USE_AESD_CHAR_DEVICE  1
 
