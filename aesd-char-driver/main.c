@@ -18,6 +18,8 @@
 #include <linux/cdev.h>
 #include <linux/fs.h> // file_operations
 #include "aesdchar.h"
+#include "aesd_ioctl.h"
+
 int aesd_major =   0; // use dynamic major
 int aesd_minor =   0;
 
@@ -236,7 +238,17 @@ loff_t aesd_llseek (struct file *filp, loff_t off, int whence)
 	break;
 
     case 2: /* SEEK_END */
-	newpos = dev->size + off;
+        // get size of cmds
+        int nEntries = (dev->data.full ) ? AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED : 
+                       ((dev->data.in_offs - dev->data.out_offs + AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED ) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED);
+        
+        int newpos = 0;
+        int out_ind = dev->data.out_offs;
+        for (int i=0; i < nEntries; i++ ) {
+            newpos += dev->data.entry[out_ind].size;
+            out_ind = (out_ind + 1) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED;
+        }
+	newpos += off;
 	break;
 
     default: /* can't happen */
