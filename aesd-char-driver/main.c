@@ -143,7 +143,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
         {
             rcount += dev->tmpDataSize;
 
-            char *kmem = kmalloc(rcount + 1, GFP_KERNEL);   // alloc additional mem
+            kmem = kmalloc(rcount + 1, GFP_KERNEL);   // alloc additional mem
             
             if (kmem == NULL)
                 goto out;
@@ -159,7 +159,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
             dev->tmpDataSize = rcount;
         }
         else {
-            char *kmem = kmalloc(count + 1, GFP_KERNEL);
+            kmem = kmalloc(count + 1, GFP_KERNEL);
   
             if (kmem == NULL)
                 goto out;
@@ -226,7 +226,7 @@ out:
 loff_t aesd_llseek (struct file *filp, loff_t off, int whence)
 {
     struct aesd_dev *dev = filp->private_data;
-    long newpos;
+    loff_t newpos;
 
     switch(whence) {
     case 0: /* SEEK_SET */
@@ -242,7 +242,7 @@ loff_t aesd_llseek (struct file *filp, loff_t off, int whence)
         int nEntries = (dev->data.full ) ? AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED : 
                        ((dev->data.in_offs - dev->data.out_offs + AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED ) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED);
         
-        int newpos = 0;
+        newpos = 0;
         int out_ind = dev->data.out_offs;
         for (int i=0; i < nEntries; i++ ) {
             newpos += dev->data.entry[out_ind].size;
@@ -254,8 +254,11 @@ loff_t aesd_llseek (struct file *filp, loff_t off, int whence)
     default: /* can't happen */
 	return -EINVAL;
     }
-    if (newpos<0) return -EINVAL;
-	filp->f_pos = newpos;
+    
+    if (newpos<0) 
+        return -EINVAL;
+	
+    filp->f_pos = newpos;
 
     return newpos;
 }
@@ -265,7 +268,9 @@ long aesd_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
     struct aesd_dev *dev = filp->private_data;
     struct aesd_seekto req;
     loff_t newpos;
-    int retval = 0;
+    int retval = -ENOTTY;
+   
+   PDEBUG("ioctl cmd %d (%d) arg %ld ", cmd, AESDCHAR_IOCSEEKTO, arg);
    
     if (_IOC_TYPE(cmd) != AESD_IOC_MAGIC) 
         return -ENOTTY;
@@ -302,16 +307,19 @@ long aesd_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
            }
            newpos += req.write_cmd_offset;
            
-           if (newpos >= dev->data.entry[outPtr].size) {
+           if (req.write_cmd_offset >= dev->data.entry[outPtr].size) {
+                PDEBUG("ioctl: Size=%d Newpos=%d outPtr=%d ", dev->data.entry[outPtr].size, outPtr);
                 retval = -EINVAL;
                 goto unlock;
            }
-
+           
            filp->f_pos = newpos;
+             
+           retval = 0;
            
            break;
        default:
-           return -ENOTTY;
+           retval = -ENOTTY;
    
    }   // switch (cmd)
 
